@@ -799,7 +799,7 @@
 
             // 그리드 열 개수 동적 설정 (가로로 최대한 많이 보이도록)
             const gridCols = Math.ceil(Math.sqrt(timeAttackChallengeCount)); // 제곱근 기준으로 열 개수 계산 (조정 가능)
-            timeAttackGridElement.style.gridTemplateColumns = `repeat(${Math.min(gridCols, 11)}, 1fr)`; // 최대 11열
+            timeAttackGridElement.style.gridTemplateColumns = `repeat(${Math.min(gridCols, 4)}, 1fr)`; // 최대 11열
 
             constellationsForGrid.forEach(constellation => {
                 const button = document.createElement('button');
