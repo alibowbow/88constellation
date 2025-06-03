@@ -322,58 +322,36 @@
     </div>
 
     <script>
-        // 사운드 효과 설정 - HTML5 Audio API를 사용한 간단한 사운드
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // 사운드 효과 설정 - 안정적인 CDN 사용
+        const soundEffects = {
+            click: new Audio('https://github.com/Tonejs/Tone.js/raw/dev/examples/audio/505514__jeremysykes__click01.wav'),
+            correct: new Audio('https://github.com/Tonejs/Tone.js/raw/dev/examples/audio/bell-C4.wav'),
+            incorrect: new Audio('https://github.com/MahdiF/taptaptap/raw/gh-pages/sounds/nope.wav'),
+            complete: new Audio('https://github.com/MahdiF/taptaptap/raw/gh-pages/sounds/ready.wav')
+        };
+        
+        // 볼륨 설정 (0.3 = 30%)
+        Object.values(soundEffects).forEach(sound => {
+            sound.volume = 0.3;
+            sound.preload = 'auto';
+        });
         
         // 사운드 재생 함수
         function playSound(soundName) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            const currentTime = audioContext.currentTime;
-            
-            switch(soundName) {
-                case 'click':
-                    oscillator.frequency.value = 800;
-                    gainNode.gain.setValueAtTime(0.1, currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
-                    oscillator.start(currentTime);
-                    oscillator.stop(currentTime + 0.1);
-                    break;
+            try {
+                if (soundEffects[soundName]) {
+                    const sound = soundEffects[soundName];
+                    sound.currentTime = 0;
+                    const playPromise = sound.play();
                     
-                case 'correct':
-                    oscillator.frequency.value = 523.25; // C5
-                    gainNode.gain.setValueAtTime(0.1, currentTime);
-                    oscillator.frequency.setValueAtTime(523.25, currentTime);
-                    oscillator.frequency.setValueAtTime(659.25, currentTime + 0.1); // E5
-                    oscillator.frequency.setValueAtTime(783.99, currentTime + 0.2); // G5
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.3);
-                    oscillator.start(currentTime);
-                    oscillator.stop(currentTime + 0.3);
-                    break;
-                    
-                case 'incorrect':
-                    oscillator.frequency.value = 300;
-                    gainNode.gain.setValueAtTime(0.1, currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.2);
-                    oscillator.start(currentTime);
-                    oscillator.stop(currentTime + 0.2);
-                    break;
-                    
-                case 'complete':
-                    oscillator.frequency.value = 523.25; // C5
-                    gainNode.gain.setValueAtTime(0.1, currentTime);
-                    oscillator.frequency.setValueAtTime(523.25, currentTime);
-                    oscillator.frequency.setValueAtTime(659.25, currentTime + 0.15); // E5
-                    oscillator.frequency.setValueAtTime(783.99, currentTime + 0.3); // G5
-                    oscillator.frequency.setValueAtTime(1046.50, currentTime + 0.45); // C6
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.6);
-                    oscillator.start(currentTime);
-                    oscillator.stop(currentTime + 0.6);
-                    break;
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.log('Sound play failed:', error);
+                        });
+                    }
+                }
+            } catch (e) {
+                console.log('Sound error:', e);
             }
         }
         
