@@ -43,7 +43,7 @@
             text-align: left;
             line-height: 1.6;
             overflow-y: auto;
-            max-height: none; /* 최대 높이 제거 */
+            max-height: 600px; /* 최대 높이 600px로 설정 */
             padding-right: 10px;
             word-break: keep-all;
             white-space: normal;
@@ -247,10 +247,26 @@
     <div class="game-container">
         <h1 class="text-2xl font-bold mb-6">88별자리(IAU) 챌린지</h1>
 
+        <!-- 진행률 표시 추가 -->
+        <div id="progress-bar" class="mb-4 hidden">
+            <div class="bg-gray-700 rounded-full h-4 relative">
+                <div id="progress-fill" class="bg-green-500 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                <span id="progress-text" class="absolute inset-0 flex items-center justify-center text-xs font-bold">0 / 88</span>
+            </div>
+        </div>
+
+        <!-- 검색 기능 추가 -->
+        <div id="search-container" class="mb-4 hidden">
+            <input type="text" id="search-input" placeholder="별자리 검색..." 
+                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+        </div>
+
         <div id="mode-selection" class="mb-6">
             <button id="learn-mode-button" class="mode-button">학습 모드</button>
             <button id="quiz-mode-button" class="mode-button">퀴즈 모드</button>
             <button id="time-attack-mode-button" class="mode-button">타임어택 모드</button>
+            <!-- 북마크 보기 버튼 추가 -->
+            <button id="bookmark-view-button" class="mode-button">북마크</button>
         </div>
 
         <div id="constellation-name" class="constellation-name hidden"></div>
@@ -261,6 +277,7 @@
         <div id="image-container" class="image-container hidden"></div>
         <div id="nav-buttons" class="nav-buttons hidden">
             <button id="prev-button" class="nav-button">이전</button>
+            <button id="bookmark-button" class="nav-button">북마크</button>
             <button id="next-button" class="nav-button">다음</button>
         </div>
 
@@ -305,6 +322,61 @@
     </div>
 
     <script>
+        // 사운드 효과 설정 - HTML5 Audio API를 사용한 간단한 사운드
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // 사운드 재생 함수
+        function playSound(soundName) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            const currentTime = audioContext.currentTime;
+            
+            switch(soundName) {
+                case 'click':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.1, currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
+                    oscillator.start(currentTime);
+                    oscillator.stop(currentTime + 0.1);
+                    break;
+                    
+                case 'correct':
+                    oscillator.frequency.value = 523.25; // C5
+                    gainNode.gain.setValueAtTime(0.1, currentTime);
+                    oscillator.frequency.setValueAtTime(523.25, currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, currentTime + 0.1); // E5
+                    oscillator.frequency.setValueAtTime(783.99, currentTime + 0.2); // G5
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.3);
+                    oscillator.start(currentTime);
+                    oscillator.stop(currentTime + 0.3);
+                    break;
+                    
+                case 'incorrect':
+                    oscillator.frequency.value = 300;
+                    gainNode.gain.setValueAtTime(0.1, currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.2);
+                    oscillator.start(currentTime);
+                    oscillator.stop(currentTime + 0.2);
+                    break;
+                    
+                case 'complete':
+                    oscillator.frequency.value = 523.25; // C5
+                    gainNode.gain.setValueAtTime(0.1, currentTime);
+                    oscillator.frequency.setValueAtTime(523.25, currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, currentTime + 0.15); // E5
+                    oscillator.frequency.setValueAtTime(783.99, currentTime + 0.3); // G5
+                    oscillator.frequency.setValueAtTime(1046.50, currentTime + 0.45); // C6
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.6);
+                    oscillator.start(currentTime);
+                    oscillator.stop(currentTime + 0.6);
+                    break;
+            }
+        }
+        
         // 별자리 데이터 (기존과 동일)
         const constellations = [
             { name: "안드로메다자리 (Andromeda)", description: "안드로메다 은하를 포함하고 있으며, 카시오페이아자리 옆에 있습니다. 우리 은하와 가장 가까운 큰 은하인 안드로메다 은하(M31)가 이 별자리에 위치합니다. 가을철 북쪽 하늘에서 W 모양의 카시오페이아자리 옆에서 찾을 수 있습니다.", season: "가을~겨울", location: "북쪽 하늘", story: "에티오피아의 공주 안드로메다는 어머니 카시오페이아의 오만함 때문에 바다 괴물 케토스에게 제물로 바쳐질 운명이었습니다. 영웅 페르세우스에게 구출되어 그의 아내가 되었습니다.", characteristics: "안드로메다 은하 (M31), 카시오페이아자리 옆에 위치", imageUrl: "" },
@@ -536,12 +608,22 @@
         let timeAttackButtonElements = {};
         let timeAttackSelectedDifficulty = 8; // 기본값 Easy
         let timeAttackSelectedLanguage = 'ko'; // 기본값 Korean
+        
+        // 북마크와 진행률 관련 변수 추가
+        let bookmarkedConstellations = JSON.parse(localStorage.getItem('bookmarkedConstellations') || '[]');
+        let learnedConstellations = JSON.parse(localStorage.getItem('learnedConstellations') || '[]');
 
         // --- DOM 요소 가져오기 ---
         const modeSelectionElement = document.getElementById('mode-selection');
         const learnModeButton = document.getElementById('learn-mode-button');
         const quizModeButton = document.getElementById('quiz-mode-button');
         const timeAttackModeButton = document.getElementById('time-attack-mode-button');
+        const bookmarkViewButton = document.getElementById('bookmark-view-button');
+        const progressBar = document.getElementById('progress-bar');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const searchContainer = document.getElementById('search-container');
+        const searchInput = document.getElementById('search-input');
 
         const constellationNameElement = document.getElementById('constellation-name');
         const constellationListGridElement = document.getElementById('constellation-list-grid');
@@ -552,6 +634,7 @@
         const navButtonsElement = document.getElementById('nav-buttons');
         const prevButton = document.getElementById('prev-button');
         const nextButton = document.getElementById('next-button');
+        const bookmarkButton = document.getElementById('bookmark-button');
         const nextQuizButton = document.getElementById('next-quiz-button');
         const feedbackElement = document.getElementById('feedback');
         const scoreDisplayElement = document.getElementById('current-score');
@@ -606,6 +689,9 @@
             learnModeButton.classList.remove('selected');
             quizModeButton.classList.remove('selected');
             timeAttackModeButton.classList.remove('selected');
+            bookmarkViewButton.classList.remove('selected');
+            searchContainer.classList.add('hidden');
+            progressBar.classList.add('hidden');
 
             if (mode === 'learn') {
                 constellationNameElement.classList.remove('hidden');
@@ -614,11 +700,16 @@
                 learnModeButton.classList.add('selected');
                 descriptionElement.innerHTML = '별자리를 선택하여 학습 내용을 확인하세요.';
                 imageContainerElement.innerHTML = '';
+                searchContainer.classList.remove('hidden');
+                progressBar.classList.remove('hidden');
+                updateProgressBar();
             } else if (mode === 'quiz') {
                 optionsElement.classList.remove('hidden');
                 feedbackElement.classList.remove('hidden');
                 scoreContainerElement.classList.remove('hidden');
                 quizModeButton.classList.add('selected');
+                progressBar.classList.remove('hidden');
+                updateProgressBar();
             } else if (mode === 'timeAttack') {
                 timeAttackContainerElement.classList.remove('hidden'); // 타임어택 컨테이너 표시
                 timeAttackOptionsElement.classList.remove('hidden'); // 옵션 표시
@@ -649,7 +740,10 @@
                 const koreanName = nameParts[0];
                 const englishName = nameParts[1] ? nameParts[1].replace(')', '') : '';
                 item.innerHTML = `${englishName}<br><small>${koreanName}</small>`;
-                item.addEventListener('click', () => showLearningDetails(index));
+                item.addEventListener('click', () => {
+                    playSound('click');
+                    showLearningDetails(index);
+                });
                 constellationListGridElement.appendChild(item);
             });
         }
@@ -680,6 +774,11 @@
             } else {
                 imageContainerElement.innerHTML = '<p class="text-sm text-gray-400">이미지 준비 중...</p>';
             }
+            
+            // 네비게이션 버튼 표시 및 북마크 버튼 업데이트
+            navButtonsElement.classList.remove('hidden');
+            updateBookmarkButton();
+            markConstellationAsLearned(index);
         }
 
         // --- 퀴즈 모드 함수 ---
@@ -735,9 +834,11 @@
                 feedbackElement.textContent = '정답입니다!';
                 feedbackElement.classList.add('correct');
                 quizCorrectAnswers++;
+                playSound('correct');
             } else {
                 feedbackElement.textContent = `틀렸습니다! 정답은 ${currentQuizConstellation.name} 입니다.`;
                 feedbackElement.classList.add('incorrect');
+                playSound('incorrect');
             }
             scoreDisplayElement.textContent = `${quizCorrectAnswers} / ${quizTotalQuestions}`;
             nextQuizButton.classList.remove('hidden');
@@ -874,6 +975,7 @@
                 clickedButton.classList.add('solved');
                 clickedButton.disabled = true;
                 timeAttackSolvedCount++;
+                playSound('correct');
 
                  // 남은 개수 즉시 업데이트
                 timeAttackRemainingElement.textContent = timeAttackChallengeCount - timeAttackSolvedCount;
@@ -887,6 +989,7 @@
             } else {
                 timeAttackIncorrectAnswers++;
                 timeAttackErrorsElement.textContent = timeAttackIncorrectAnswers;
+                playSound('incorrect');
                 // 오답 시각적 피드백
                 clickedButton.style.transform = 'translateX(-3px)';
                 setTimeout(() => {
@@ -908,6 +1011,8 @@
             timeAttackActive = false;
             clearInterval(timeAttackTimerInterval);
             const totalTimeSeconds = (Date.now() - timeAttackStartTime) / 1000;
+            
+            playSound('complete');
 
             descriptionElement.innerHTML = "타임어택 게임 종료!";
             timeAttackGameAreaElement.classList.add('hidden'); // 게임 영역 숨기기
@@ -922,19 +1027,155 @@
             // 다시 시작 버튼 클릭 시 옵션 선택 화면으로 돌아가도록 수정
             document.getElementById('restart-time-attack-button').addEventListener('click', enterTimeAttackMode);
         }
+        
+        // --- 북마크 및 진행률 관련 함수 추가 ---
+        function updateBookmarkButton() {
+            const constellation = constellationsSortedEnglish[currentLearnConstellationIndex];
+            const englishName = constellation.name.substring(constellation.name.indexOf('(') + 1, constellation.name.indexOf(')'));
+            
+            if (bookmarkedConstellations.includes(englishName)) {
+                bookmarkButton.textContent = '북마크 해제';
+                bookmarkButton.style.backgroundColor = '#f56565';
+            } else {
+                bookmarkButton.textContent = '북마크';
+                bookmarkButton.style.backgroundColor = '#4a5568';
+            }
+        }
+        
+        function toggleBookmark() {
+            const constellation = constellationsSortedEnglish[currentLearnConstellationIndex];
+            const englishName = constellation.name.substring(constellation.name.indexOf('(') + 1, constellation.name.indexOf(')'));
+            
+            if (bookmarkedConstellations.includes(englishName)) {
+                bookmarkedConstellations = bookmarkedConstellations.filter(name => name !== englishName);
+            } else {
+                bookmarkedConstellations.push(englishName);
+            }
+            
+            localStorage.setItem('bookmarkedConstellations', JSON.stringify(bookmarkedConstellations));
+            updateBookmarkButton();
+        }
+        
+        function markConstellationAsLearned(index) {
+            const constellation = constellationsSortedEnglish[index];
+            const englishName = constellation.name.substring(constellation.name.indexOf('(') + 1, constellation.name.indexOf(')'));
+            
+            if (!learnedConstellations.includes(englishName)) {
+                learnedConstellations.push(englishName);
+                localStorage.setItem('learnedConstellations', JSON.stringify(learnedConstellations));
+                updateProgressBar();
+            }
+        }
+        
+        function updateProgressBar() {
+            const progress = (learnedConstellations.length / 88) * 100;
+            progressFill.style.width = `${progress}%`;
+            progressText.textContent = `${learnedConstellations.length} / 88`;
+            
+            if (currentMode === 'learn' || currentMode === 'quiz') {
+                progressBar.classList.remove('hidden');
+            }
+        }
+        
+        function showBookmarkedConstellations() {
+            currentMode = 'bookmark';
+            updateUIForMode('learn'); // 학습 모드 UI 재사용
+            
+            // 모든 모드 버튼 선택 해제
+            learnModeButton.classList.remove('selected');
+            quizModeButton.classList.remove('selected');
+            timeAttackModeButton.classList.remove('selected');
+            bookmarkViewButton.classList.add('selected');
+            
+            constellationNameElement.textContent = '북마크한 별자리';
+            descriptionElement.innerHTML = '북마크한 별자리를 선택하여 다시 학습하세요.';
+            
+            // 북마크한 별자리만 표시
+            constellationListGridElement.innerHTML = '';
+            constellationsSortedEnglish.forEach((constellation, index) => {
+                const englishName = constellation.name.substring(constellation.name.indexOf('(') + 1, constellation.name.indexOf(')'));
+                if (bookmarkedConstellations.includes(englishName)) {
+                    const item = document.createElement('div');
+                    item.classList.add('constellation-list-item');
+                    const nameParts = constellation.name.split(' (');
+                    const koreanName = nameParts[0];
+                    item.innerHTML = `${englishName}<br><small>${koreanName}</small>`;
+                    item.addEventListener('click', () => {
+                        playSound('click');
+                        currentMode = 'learn'; // 일시적으로 learn 모드로 전환
+                        showLearningDetails(index);
+                        currentMode = 'bookmark'; // 다시 bookmark 모드로
+                    });
+                    constellationListGridElement.appendChild(item);
+                }
+            });
+            
+            if (bookmarkedConstellations.length === 0) {
+                constellationListGridElement.innerHTML = '<p class="text-gray-400">북마크한 별자리가 없습니다.</p>';
+            }
+        }
+        
+        // 검색 기능 추가
+        function setupSearch() {
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                if (currentMode === 'learn' || currentMode === 'bookmark') {
+                    filterConstellationGrid(searchTerm);
+                }
+            });
+        }
+        
+        function filterConstellationGrid(searchTerm) {
+            const items = constellationListGridElement.querySelectorAll('.constellation-list-item');
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // 이전/다음 버튼 이벤트 핸들러
+        function navigateLearning(direction) {
+            if (currentMode !== 'learn') return;
+            
+            if (direction === 'prev') {
+                currentLearnConstellationIndex--;
+                if (currentLearnConstellationIndex < 0) {
+                    currentLearnConstellationIndex = constellationsSortedEnglish.length - 1;
+                }
+            } else {
+                currentLearnConstellationIndex++;
+                if (currentLearnConstellationIndex >= constellationsSortedEnglish.length) {
+                    currentLearnConstellationIndex = 0;
+                }
+            }
+            
+            showLearningDetails(currentLearnConstellationIndex);
+        }
 
 
         // --- 이벤트 리스너 연결 ---
         learnModeButton.addEventListener('click', startLearnMode);
         quizModeButton.addEventListener('click', startQuizMode);
         timeAttackModeButton.addEventListener('click', enterTimeAttackMode);
+        bookmarkViewButton.addEventListener('click', showBookmarkedConstellations);
         startTimeAttackGameButton.addEventListener('click', initiateTimeAttackGame);
 
         nextQuizButton.addEventListener('click', nextQuizRound);
+        
+        // 네비게이션 버튼 이벤트
+        prevButton.addEventListener('click', () => navigateLearning('prev'));
+        nextButton.addEventListener('click', () => navigateLearning('next'));
+        bookmarkButton.addEventListener('click', toggleBookmark);
 
         // 페이지 로드 시 초기 상태 설정
         window.onload = function() {
             updateUIForMode(null);
+            setupSearch();
+            updateProgressBar();
         };
 
     </script>
