@@ -18,35 +18,35 @@
         }
 
         /* =========================================================
-           디자인 토큰 — 딥스페이스 프리미엄 테마
+           디자인 토큰 — 미니멀 럭셔리 (딥나이트 + 샴페인 골드)
            ========================================================= */
         :root {
-            --bg-0: #05060f;
-            --bg-1: #0a0f29;
-            --bg-2: #161a40;
-            --surface:   rgba(22, 28, 60, 0.55);
-            --surface-2: rgba(12, 16, 38, 0.60);
-            --surface-3: rgba(30, 38, 78, 0.50);
-            --border-glass:  rgba(150, 170, 255, 0.14);
-            --border-strong: rgba(150, 170, 255, 0.30);
-            --text:       #eaf0ff;
-            --text-dim:   #b3bce0;
-            --text-faint: #8088b5;
-            --accent-cyan:      #5ce1ff;
-            --accent-cyan-soft: #9fefff;
-            --accent-violet:    #a6a0ff;
-            --accent-gold:      #ffd089;
-            --correct:   #38e0b0;
-            --incorrect: #ff8197;
-            --bookmark-on: #8b5cf6;
-            --glow-cyan:   rgba(92, 225, 255, 0.38);
-            --glow-violet: rgba(166, 160, 255, 0.30);
-            --radius-lg: 26px;
-            --radius:    14px;
+            --bg-0: #060709;
+            --bg-1: #0b0d12;
+            --bg-2: #11141b;
+            --surface:   rgba(255, 255, 255, 0.045);
+            --surface-2: rgba(255, 255, 255, 0.035);
+            --surface-3: rgba(255, 255, 255, 0.060);
+            --border-glass:  rgba(255, 255, 255, 0.09);
+            --border-strong: rgba(255, 255, 255, 0.18);
+            --text:       #ece9e1;
+            --text-dim:   #9a9aa3;
+            --text-faint: #6b6b75;
+            --accent-cyan:      #d9b779;   /* 주 강조: 샴페인 골드 */
+            --accent-cyan-soft: #ecd6a6;   /* 라이트 골드 */
+            --accent-violet:    #b59a6b;   /* 딥 골드(그라데이션 보조) */
+            --accent-gold:      #d9b779;
+            --correct:   #6fb89a;          /* 절제된 세이지 그린 */
+            --incorrect: #cf8a86;          /* 절제된 코랄 */
+            --bookmark-on: #b59a6b;
+            --glow-cyan:   rgba(217, 183, 121, 0.16);
+            --glow-violet: rgba(217, 183, 121, 0.10);
+            --radius-lg: 20px;
+            --radius:    13px;
             --radius-sm: 10px;
-            --ring: 0 0 0 3px rgba(92, 225, 255, 0.40);
-            --maxw:  min(1140px, 100%);
-            --readw: 780px;
+            --ring: 0 0 0 2px rgba(217, 183, 121, 0.55);
+            --maxw:  min(1080px, 100%);
+            --readw: 760px;
             --ease:     cubic-bezier(.22, .61, .36, 1);
             --ease-out: cubic-bezier(.16, 1, .3, 1);
         }
@@ -62,25 +62,23 @@
                 linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 55%, #04040c 100%);
             background-attachment: fixed;
         }
-        /* 천천히 흐르는 오로라(네뷸라) 레이어 */
+        /* 아주 은은한 광원 (미니멀): 위쪽 골드, 아래쪽 차가운 그림자 */
         html::before {
             content: "";
             position: fixed;
-            inset: -25%;
+            inset: -20%;
             z-index: -3;
             pointer-events: none;
             background:
-                radial-gradient(38% 46% at 22% 28%, rgba(92, 225, 255, 0.18), transparent 70%),
-                radial-gradient(42% 52% at 82% 22%, rgba(150, 120, 255, 0.20), transparent 70%),
-                radial-gradient(46% 50% at 62% 88%, rgba(255, 200, 120, 0.10), transparent 70%);
-            filter: blur(36px) saturate(130%);
-            animation: aurora 26s ease-in-out infinite alternate;
-            will-change: transform, opacity;
+                radial-gradient(50% 38% at 50% -5%, rgba(217, 183, 121, 0.10), transparent 70%),
+                radial-gradient(60% 50% at 50% 112%, rgba(120, 130, 170, 0.06), transparent 70%);
+            filter: blur(30px);
+            animation: glow-breathe 16s ease-in-out infinite alternate;
+            will-change: opacity;
         }
-        @keyframes aurora {
-            0%   { transform: translate3d(-3%, -2%, 0) scale(1.05) rotate(-2deg); opacity: .80; }
-            50%  { transform: translate3d(3%, 2%, 0)   scale(1.18) rotate(2deg);  opacity: 1; }
-            100% { transform: translate3d(2%, -1%, 0)  scale(1.10) rotate(1deg);  opacity: .88; }
+        @keyframes glow-breathe {
+            from { opacity: .72; }
+            to   { opacity: 1; }
         }
 
         body {
@@ -137,52 +135,42 @@
             animation: twinkle 3.8s ease-in-out infinite reverse;
         }
         @keyframes twinkle {
-            0%, 100% { opacity: .40; }
-            50%      { opacity: 1; }
+            0%, 100% { opacity: .18; }
+            50%      { opacity: .55; }
         }
 
         /* ===== 글래스모피즘 게임 카드 ===== */
         .game-container {
             position: relative;
-            background: linear-gradient(180deg, rgba(34, 42, 84, 0.50), rgba(12, 16, 38, 0.52));
-            backdrop-filter: blur(26px) saturate(140%);
-            -webkit-backdrop-filter: blur(26px) saturate(140%);
+            background: linear-gradient(180deg, rgba(40, 42, 52, 0.55), rgba(16, 18, 24, 0.55));
+            backdrop-filter: blur(26px) saturate(135%);
+            -webkit-backdrop-filter: blur(26px) saturate(135%);
             border: 1px solid var(--border-glass);
-            padding: 40px clamp(22px, 4vw, 52px);
+            padding: clamp(36px, 4vw, 56px) clamp(24px, 4vw, 56px);
             border-radius: var(--radius-lg);
             box-shadow:
-                0 40px 90px -40px rgba(0, 0, 0, 0.75),
-                0 2px 30px -20px rgba(92, 225, 255, 0.20),
-                0 1px 0 rgba(255, 255, 255, 0.08) inset;
+                0 50px 100px -50px rgba(0, 0, 0, 0.85),
+                0 1px 0 rgba(255, 255, 255, 0.06) inset;
             text-align: center;
             max-width: var(--maxw);
             width: 100%;
             margin: 26px 0;
             animation: rise-in .8s var(--ease-out) both;
         }
-        /* 카드 가장자리: 천천히 도는 그라데이션 글로우 라인 */
+        /* 카드 상단 하이라이트 (미니멀·정적): 빛이 위 모서리에 닿은 느낌 */
         .game-container::before {
             content: "";
             position: absolute;
-            inset: -1px;
+            inset: 0;
             border-radius: inherit;
             padding: 1px;
-            background: conic-gradient(from var(--angle),
-                transparent 0%,
-                var(--accent-cyan) 14%,
-                transparent 32%,
-                transparent 60%,
-                var(--accent-violet) 76%,
-                transparent 94%);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 42%);
             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
                     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite: xor;
                     mask-composite: exclude;
-            opacity: .45;
             pointer-events: none;
-            animation: border-spin 9s linear infinite;
         }
-        @keyframes border-spin { to { --angle: 360deg; } }
         @keyframes rise-in {
             from { opacity: 0; transform: translateY(18px) scale(.99); }
             to   { opacity: 1; transform: none; }
@@ -190,21 +178,25 @@
 
         /* ===== 타이틀 ===== */
         .game-container h1 {
-            font-size: clamp(1.9rem, 5.5vw, 2.7rem);
-            font-weight: 800;
-            letter-spacing: -0.025em;
-            margin-bottom: 30px;
-            background: linear-gradient(100deg, #ffffff 0%, var(--accent-cyan-soft) 45%, var(--accent-violet) 100%);
-            background-size: 220% auto;
-            -webkit-background-clip: text;
-                    background-clip: text;
-            color: transparent;
-            filter: drop-shadow(0 4px 18px rgba(92, 160, 255, 0.25));
-            animation: title-shine 7s ease-in-out infinite;
+            position: relative;
+            font-size: clamp(1.55rem, 4.2vw, 2.15rem);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            margin-bottom: 34px;
+            padding-bottom: 18px;
+            color: var(--text);
         }
-        @keyframes title-shine {
-            0%, 100% { background-position: 0% center; }
-            50%      { background-position: 100% center; }
+        /* 타이틀 하단의 얇은 골드 악센트 라인 */
+        .game-container h1::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            width: 46px;
+            height: 2px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
         }
 
         /* ===== 설명 / 학습 정보 패널 ===== */
@@ -235,12 +227,11 @@
 
         /* ===== 별자리 이름 (학습 모드) ===== */
         .constellation-name {
-            font-size: clamp(1.4rem, 4vw, 1.8rem);
-            font-weight: 800;
-            letter-spacing: -0.01em;
-            margin-bottom: 16px;
-            color: var(--accent-cyan);
-            text-shadow: 0 0 22px var(--glow-cyan);
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            margin-bottom: 18px;
+            color: var(--accent-gold);
         }
 
         /* ===== 퀴즈 옵션 그리드 ===== */
@@ -275,7 +266,7 @@
         /* ===== 버튼 공통 시스템 ===== */
         .option-button, .mode-button, .nav-button, .next-quiz-button, .time-attack-button, #start-time-attack-game-button, #restart-time-attack-button {
             font-family: inherit;
-            background: linear-gradient(180deg, rgba(60, 72, 130, 0.55), rgba(36, 44, 86, 0.55));
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
             color: var(--text);
             padding: 12px 22px;
             border-radius: var(--radius);
@@ -362,8 +353,8 @@
             margin-bottom: 22px;
             letter-spacing: -0.01em;
         }
-        .correct   { color: var(--correct);   text-shadow: 0 0 18px rgba(46, 230, 182, 0.40); }
-        .incorrect { color: var(--incorrect); text-shadow: 0 0 18px rgba(255, 125, 146, 0.40); }
+        .correct   { color: var(--correct); }
+        .incorrect { color: var(--incorrect); }
 
         /* ===== 점수 / 통계 ===== */
         .score, .time-attack-stats {
@@ -412,9 +403,9 @@
         }
         .constellation-list-item:hover {
             transform: translateY(-2px);
-            background: linear-gradient(180deg, rgba(79,227,255,.16), rgba(181,155,255,.12));
+            background: rgba(217, 183, 121, 0.10);
             border-color: var(--border-strong);
-            box-shadow: 0 10px 22px -12px var(--glow-cyan);
+            box-shadow: 0 10px 22px -14px rgba(0, 0, 0, 0.6);
         }
         .constellation-list-item small { color: var(--text-faint); font-weight: 500; }
 
@@ -644,45 +635,15 @@
         .constellation-list-item:nth-child(9)  { animation-delay: .18s; }
         .constellation-list-item:nth-child(10) { animation-delay: .20s; }
 
-        /* 정답/오답 피드백 강조 모션 (id로 우선순위 확보) */
-        #feedback.correct   { animation: feedback-pop .5s var(--ease-out); }
-        #feedback.incorrect { animation: feedback-shake .45s ease; }
-        @keyframes feedback-pop {
-            0%   { transform: scale(.85); opacity: .4; }
-            60%  { transform: scale(1.08); }
-            100% { transform: scale(1);   opacity: 1; }
+        /* 정답/오답: 차분하게 떠오르며 강조 (미니멀) */
+        #feedback.correct, #feedback.incorrect {
+            animation: feedback-in .45s var(--ease-out);
         }
-        @keyframes feedback-shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-7px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(3px); }
+        @keyframes feedback-in {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: none; }
         }
-
-        /* 큰 버튼: 호버 시 빛 스윕 */
-        .mode-button, .nav-button, .next-quiz-button,
-        #start-time-attack-game-button, #restart-time-attack-button {
-            position: relative;
-            overflow: hidden;
-        }
-        .nav-button::after, .next-quiz-button::after,
-        #start-time-attack-game-button::after, #restart-time-attack-button::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -130%;
-            width: 70%;
-            height: 100%;
-            background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
-            transform: skewX(-18deg);
-            transition: left .55s var(--ease);
-            pointer-events: none;
-        }
-        .nav-button:hover::after, .next-quiz-button:hover::after,
-        #start-time-attack-game-button:hover::after, #restart-time-attack-button:hover::after {
-            left: 150%;
-        }
+        /* (미니멀 럭셔리: 화려한 빛 스윕 효과는 의도적으로 제외) */
 
         /* ===== 모션 최소화 선호 ===== */
         @media (prefers-reduced-motion: reduce) {
