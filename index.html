@@ -10,6 +10,13 @@
     <link rel="preconnect" href="https://fastly.jsdelivr.net" crossorigin>
     <link rel="stylesheet" as="style" crossorigin href="https://fastly.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendard-dynamic-subset.min.css" />
     <style>
+        /* 애니메이션용 커스텀 속성 (회전 가능한 각도) */
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
         /* =========================================================
            디자인 토큰 — 딥스페이스 프리미엄 테마
            ========================================================= */
@@ -20,29 +27,62 @@
             --surface:   rgba(22, 28, 60, 0.55);
             --surface-2: rgba(12, 16, 38, 0.60);
             --surface-3: rgba(30, 38, 78, 0.50);
-            --border-glass:  rgba(150, 170, 255, 0.16);
-            --border-strong: rgba(150, 170, 255, 0.34);
-            --text:       #e9edff;
-            --text-dim:   #aeb8e0;
-            --text-faint: #7c87b8;
-            --accent-cyan:      #4fe3ff;
-            --accent-cyan-soft: #8af0ff;
-            --accent-violet:    #b59bff;
-            --accent-gold:      #ffd27a;
-            --correct:   #2ee6b6;
-            --incorrect: #ff7d92;
+            --border-glass:  rgba(150, 170, 255, 0.14);
+            --border-strong: rgba(150, 170, 255, 0.30);
+            --text:       #eaf0ff;
+            --text-dim:   #b3bce0;
+            --text-faint: #8088b5;
+            --accent-cyan:      #5ce1ff;
+            --accent-cyan-soft: #9fefff;
+            --accent-violet:    #a6a0ff;
+            --accent-gold:      #ffd089;
+            --correct:   #38e0b0;
+            --incorrect: #ff8197;
             --bookmark-on: #8b5cf6;
-            --glow-cyan:   rgba(79, 227, 255, 0.55);
-            --glow-violet: rgba(181, 155, 255, 0.45);
-            --radius-lg: 22px;
+            --glow-cyan:   rgba(92, 225, 255, 0.38);
+            --glow-violet: rgba(166, 160, 255, 0.30);
+            --radius-lg: 26px;
             --radius:    14px;
             --radius-sm: 10px;
-            --ring: 0 0 0 3px rgba(79, 227, 255, 0.45);
+            --ring: 0 0 0 3px rgba(92, 225, 255, 0.40);
+            --maxw:  min(1140px, 100%);
+            --readw: 780px;
+            --ease:     cubic-bezier(.22, .61, .36, 1);
+            --ease-out: cubic-bezier(.16, 1, .3, 1);
         }
 
         * { box-sizing: border-box; }
 
-        /* ===== 우주 그라데이션 배경 ===== */
+        /* ===== 우주 베이스 + 살아있는 오로라 ===== */
+        html {
+            min-height: 100%;
+            background:
+                radial-gradient(120% 80% at 50% -10%, #0b1233 0%, transparent 55%),
+                radial-gradient(100% 70% at 50% 115%, #0a0820 0%, transparent 55%),
+                linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 55%, #04040c 100%);
+            background-attachment: fixed;
+        }
+        /* 천천히 흐르는 오로라(네뷸라) 레이어 */
+        html::before {
+            content: "";
+            position: fixed;
+            inset: -25%;
+            z-index: -3;
+            pointer-events: none;
+            background:
+                radial-gradient(38% 46% at 22% 28%, rgba(92, 225, 255, 0.18), transparent 70%),
+                radial-gradient(42% 52% at 82% 22%, rgba(150, 120, 255, 0.20), transparent 70%),
+                radial-gradient(46% 50% at 62% 88%, rgba(255, 200, 120, 0.10), transparent 70%);
+            filter: blur(36px) saturate(130%);
+            animation: aurora 26s ease-in-out infinite alternate;
+            will-change: transform, opacity;
+        }
+        @keyframes aurora {
+            0%   { transform: translate3d(-3%, -2%, 0) scale(1.05) rotate(-2deg); opacity: .80; }
+            50%  { transform: translate3d(3%, 2%, 0)   scale(1.18) rotate(2deg);  opacity: 1; }
+            100% { transform: translate3d(2%, -1%, 0)  scale(1.10) rotate(1deg);  opacity: .88; }
+        }
+
         body {
             font-family: 'Pretendard Variable', 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color: var(--text);
@@ -50,16 +90,11 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 28px 18px 56px;
+            padding: 32px 20px 64px;
             overflow-x: hidden;
             overflow-y: auto;
             position: relative;
-            background:
-                radial-gradient(1200px 700px at 18% -10%, rgba(79, 227, 255, 0.10), transparent 60%),
-                radial-gradient(1100px 800px at 100% 0%, rgba(181, 155, 255, 0.13), transparent 55%),
-                radial-gradient(900px 900px at 50% 120%, rgba(255, 210, 122, 0.07), transparent 60%),
-                linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 55%, #04040c 100%);
-            background-attachment: fixed;
+            background: transparent;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
         }
@@ -109,37 +144,45 @@
         /* ===== 글래스모피즘 게임 카드 ===== */
         .game-container {
             position: relative;
-            background: linear-gradient(180deg, rgba(36, 44, 88, 0.55), rgba(14, 18, 42, 0.55));
-            backdrop-filter: blur(22px) saturate(150%);
-            -webkit-backdrop-filter: blur(22px) saturate(150%);
+            background: linear-gradient(180deg, rgba(34, 42, 84, 0.50), rgba(12, 16, 38, 0.52));
+            backdrop-filter: blur(26px) saturate(140%);
+            -webkit-backdrop-filter: blur(26px) saturate(140%);
             border: 1px solid var(--border-glass);
-            padding: 34px 30px;
+            padding: 40px clamp(22px, 4vw, 52px);
             border-radius: var(--radius-lg);
             box-shadow:
-                0 30px 70px -25px rgba(0, 0, 0, 0.80),
-                0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-                0 1px 0 rgba(255, 255, 255, 0.12) inset;
+                0 40px 90px -40px rgba(0, 0, 0, 0.75),
+                0 2px 30px -20px rgba(92, 225, 255, 0.20),
+                0 1px 0 rgba(255, 255, 255, 0.08) inset;
             text-align: center;
-            max-width: 700px;
+            max-width: var(--maxw);
             width: 100%;
-            margin: 18px 0;
-            animation: rise-in .7s cubic-bezier(.2,.7,.2,1) both;
+            margin: 26px 0;
+            animation: rise-in .8s var(--ease-out) both;
         }
-        /* 카드 가장자리 그라데이션 글로우 라인 */
+        /* 카드 가장자리: 천천히 도는 그라데이션 글로우 라인 */
         .game-container::before {
             content: "";
             position: absolute;
             inset: -1px;
             border-radius: inherit;
             padding: 1px;
-            background: linear-gradient(140deg, var(--glow-cyan), transparent 35%, transparent 65%, var(--glow-violet));
+            background: conic-gradient(from var(--angle),
+                transparent 0%,
+                var(--accent-cyan) 14%,
+                transparent 32%,
+                transparent 60%,
+                var(--accent-violet) 76%,
+                transparent 94%);
             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
                     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite: xor;
                     mask-composite: exclude;
-            opacity: .55;
+            opacity: .45;
             pointer-events: none;
+            animation: border-spin 9s linear infinite;
         }
+        @keyframes border-spin { to { --angle: 360deg; } }
         @keyframes rise-in {
             from { opacity: 0; transform: translateY(18px) scale(.99); }
             to   { opacity: 1; transform: none; }
@@ -147,15 +190,21 @@
 
         /* ===== 타이틀 ===== */
         .game-container h1 {
-            font-size: clamp(1.7rem, 5vw, 2.3rem);
+            font-size: clamp(1.9rem, 5.5vw, 2.7rem);
             font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 26px;
-            background: linear-gradient(100deg, var(--accent-cyan-soft) 0%, #ffffff 38%, var(--accent-violet) 72%, var(--accent-gold) 100%);
+            letter-spacing: -0.025em;
+            margin-bottom: 30px;
+            background: linear-gradient(100deg, #ffffff 0%, var(--accent-cyan-soft) 45%, var(--accent-violet) 100%);
+            background-size: 220% auto;
             -webkit-background-clip: text;
                     background-clip: text;
             color: transparent;
-            filter: drop-shadow(0 2px 12px rgba(120, 90, 255, 0.28));
+            filter: drop-shadow(0 4px 18px rgba(92, 160, 255, 0.25));
+            animation: title-shine 7s ease-in-out infinite;
+        }
+        @keyframes title-shine {
+            0%, 100% { background-position: 0% center; }
+            50%      { background-position: 100% center; }
         }
 
         /* ===== 설명 / 학습 정보 패널 ===== */
@@ -201,13 +250,18 @@
             gap: 14px;
             margin-bottom: 22px;
         }
-        /* ===== 모드 선택 바 ===== */
+        /* ===== 모드 선택 바 (세그먼트 컨트롤) ===== */
         #mode-selection {
-            display: flex;
+            display: inline-flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 26px;
+            gap: 6px;
+            margin-bottom: 30px;
+            padding: 6px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-glass);
+            border-radius: 999px;
+            box-shadow: 0 12px 34px -22px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.05) inset;
         }
         /* ===== 네비게이션 버튼 (학습 모드) ===== */
         .nav-buttons {
@@ -250,19 +304,42 @@
             box-shadow: var(--ring), 0 10px 26px -14px rgba(0,0,0,.85);
         }
 
-        /* 모드 버튼: 알약형 */
+        /* 모드 버튼: 세그먼트 탭 */
         .mode-button {
             border-radius: 999px;
-            padding: 11px 20px;
+            padding: 10px 20px;
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
+            color: var(--text-dim);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+        .mode-button:hover {
+            transform: none;
+            background: rgba(255, 255, 255, 0.06);
+            border-color: transparent;
+            box-shadow: none;
+            color: var(--text);
         }
         .mode-button.selected {
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
-            color: #08122b;
+            color: #07122a;
             border-color: transparent;
             font-weight: 800;
-            box-shadow: 0 10px 26px -10px var(--glow-cyan), 0 0 0 1px rgba(255,255,255,.25) inset;
+            box-shadow: 0 8px 22px -8px var(--glow-cyan), 0 0 0 1px rgba(255,255,255,.20) inset;
+            animation: tab-pop .35s var(--ease-out);
         }
-        .mode-button.selected:hover { color: #08122b; }
+        .mode-button.selected:hover {
+            color: #07122a;
+            transform: none;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+        }
+        @keyframes tab-pop {
+            0%   { transform: scale(.9); }
+            60%  { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
 
         /* 퀴즈: 답 선택 후 비활성화된 옵션 */
         .option-button:disabled {
@@ -313,9 +390,9 @@
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 10px;
             margin-bottom: 22px;
-            max-height: 200px;
+            max-height: 340px;
             overflow-y: auto;
-            padding: 12px;
+            padding: 14px;
             background: var(--surface-2);
             border: 1px solid var(--border-glass);
             border-radius: var(--radius);
@@ -516,6 +593,95 @@
             .options-grid { grid-template-columns: 1fr; }
             .description { font-size: 0.9rem; }
             .nav-buttons { gap: 10px; }
+        }
+
+        /* =========================================================
+           넓은 레이아웃 폭 & 모션
+           ========================================================= */
+        /* 텍스트 블록은 가독 폭으로 가운데, 그리드는 카드 전체 폭 활용 */
+        #progress-bar, #search-container, .description, .constellation-name,
+        .feedback, .score, .nav-buttons,
+        #time-attack-options, #time-attack-stats, #time-attack-results {
+            max-width: var(--readw);
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .options-grid, .constellation-list-grid, #time-attack-grid, .image-container {
+            width: 100%;
+        }
+
+        /* 모드 전환 시 각 영역이 살짝 떠오르며 등장 */
+        #constellation-name, #constellation-list-grid, #image-container,
+        #description, #options, #next-quiz-button, #feedback, #score,
+        #nav-buttons, #time-attack-container, #search-container, #progress-bar {
+            animation: view-in .5s var(--ease-out) both;
+        }
+        @keyframes view-in {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* 동적 생성 항목: 스태거 등장 */
+        .constellation-list-item, .option-button, .time-attack-button {
+            animation: pop-in .42s var(--ease-out) both;
+        }
+        @keyframes pop-in {
+            from { opacity: 0; transform: translateY(10px) scale(.96); }
+            to   { opacity: 1; transform: none; }
+        }
+        .option-button:nth-child(1) { animation-delay: .04s; }
+        .option-button:nth-child(2) { animation-delay: .10s; }
+        .option-button:nth-child(3) { animation-delay: .16s; }
+        .option-button:nth-child(4) { animation-delay: .22s; }
+        .constellation-list-item:nth-child(1)  { animation-delay: .02s; }
+        .constellation-list-item:nth-child(2)  { animation-delay: .04s; }
+        .constellation-list-item:nth-child(3)  { animation-delay: .06s; }
+        .constellation-list-item:nth-child(4)  { animation-delay: .08s; }
+        .constellation-list-item:nth-child(5)  { animation-delay: .10s; }
+        .constellation-list-item:nth-child(6)  { animation-delay: .12s; }
+        .constellation-list-item:nth-child(7)  { animation-delay: .14s; }
+        .constellation-list-item:nth-child(8)  { animation-delay: .16s; }
+        .constellation-list-item:nth-child(9)  { animation-delay: .18s; }
+        .constellation-list-item:nth-child(10) { animation-delay: .20s; }
+
+        /* 정답/오답 피드백 강조 모션 (id로 우선순위 확보) */
+        #feedback.correct   { animation: feedback-pop .5s var(--ease-out); }
+        #feedback.incorrect { animation: feedback-shake .45s ease; }
+        @keyframes feedback-pop {
+            0%   { transform: scale(.85); opacity: .4; }
+            60%  { transform: scale(1.08); }
+            100% { transform: scale(1);   opacity: 1; }
+        }
+        @keyframes feedback-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-7px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(3px); }
+        }
+
+        /* 큰 버튼: 호버 시 빛 스윕 */
+        .mode-button, .nav-button, .next-quiz-button,
+        #start-time-attack-game-button, #restart-time-attack-button {
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-button::after, .next-quiz-button::after,
+        #start-time-attack-game-button::after, #restart-time-attack-button::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -130%;
+            width: 70%;
+            height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+            transform: skewX(-18deg);
+            transition: left .55s var(--ease);
+            pointer-events: none;
+        }
+        .nav-button:hover::after, .next-quiz-button:hover::after,
+        #start-time-attack-game-button:hover::after, #restart-time-attack-button:hover::after {
+            left: 150%;
         }
 
         /* ===== 모션 최소화 선호 ===== */
@@ -1164,7 +1330,7 @@
 
             // 그리드 열 개수 동적 설정 (가로로 최대한 많이 보이도록)
             const gridCols = Math.ceil(Math.sqrt(timeAttackChallengeCount)); // 제곱근 기준으로 열 개수 계산 (조정 가능)
-            timeAttackGridElement.style.gridTemplateColumns = `repeat(${Math.min(gridCols, 4)}, 1fr)`; // 최대 11열
+            timeAttackGridElement.style.gridTemplateColumns = `repeat(${Math.min(gridCols, 8)}, 1fr)`; // 넓은 화면에서 최대 8열까지 펼침
 
             constellationsForGrid.forEach(constellation => {
                 const button = document.createElement('button');
