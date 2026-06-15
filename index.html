@@ -5,240 +5,526 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>88별자리(IAU) 챌린지</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="theme-color" content="#05060f">
+    <meta name="color-scheme" content="dark">
+    <link rel="preconnect" href="https://fastly.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" as="style" crossorigin href="https://fastly.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendard-dynamic-subset.min.css" />
     <style>
-        /* 게임 배경 및 폰트 설정 */
+        /* =========================================================
+           디자인 토큰 — 딥스페이스 프리미엄 테마
+           ========================================================= */
+        :root {
+            --bg-0: #05060f;
+            --bg-1: #0a0f29;
+            --bg-2: #161a40;
+            --surface:   rgba(22, 28, 60, 0.55);
+            --surface-2: rgba(12, 16, 38, 0.60);
+            --surface-3: rgba(30, 38, 78, 0.50);
+            --border-glass:  rgba(150, 170, 255, 0.16);
+            --border-strong: rgba(150, 170, 255, 0.34);
+            --text:       #e9edff;
+            --text-dim:   #aeb8e0;
+            --text-faint: #7c87b8;
+            --accent-cyan:      #4fe3ff;
+            --accent-cyan-soft: #8af0ff;
+            --accent-violet:    #b59bff;
+            --accent-gold:      #ffd27a;
+            --correct:   #2ee6b6;
+            --incorrect: #ff7d92;
+            --bookmark-on: #8b5cf6;
+            --glow-cyan:   rgba(79, 227, 255, 0.55);
+            --glow-violet: rgba(181, 155, 255, 0.45);
+            --radius-lg: 22px;
+            --radius:    14px;
+            --radius-sm: 10px;
+            --ring: 0 0 0 3px rgba(79, 227, 255, 0.45);
+        }
+
+        * { box-sizing: border-box; }
+
+        /* ===== 우주 그라데이션 배경 ===== */
         body {
-            font-family: 'Inter', sans-serif; /* Tailwind 기본 폰트 사용 */
-            background-color: #1a202c; /* 어두운 배경 */
-            color: #e2e8f0; /* 밝은 글씨 */
+            font-family: 'Pretendard Variable', 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text);
             display: flex;
-            flex-direction: column; /* 컨텐츠를 세로로 쌓도록 변경 */
-            align-items: center; /* 가로 중앙 정렬 */
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
-            padding: 20px; /* 모바일에서 여백 확보 */
-            overflow-y: auto; /* 스크롤 추가 */
-             /* 배경 이미지 설정 */
-             background-image: url('https://i.ibb.co/CDP6Y4w/whisk-imageba432247bc93458997b3340081bb8.jpg');
-             background-position: center;   /* 가운데 정렬 */
-             background-repeat: repeat;  /* 이미지 반복 */
+            padding: 28px 18px 56px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            position: relative;
+            background:
+                radial-gradient(1200px 700px at 18% -10%, rgba(79, 227, 255, 0.10), transparent 60%),
+                radial-gradient(1100px 800px at 100% 0%, rgba(181, 155, 255, 0.13), transparent 55%),
+                radial-gradient(900px 900px at 50% 120%, rgba(255, 210, 122, 0.07), transparent 60%),
+                linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 55%, #04040c 100%);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
-        /* 게임 컨테이너 스타일 */
+
+        /* ===== 반짝이는 별 (순수 CSS, JS 없음) ===== */
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: -50%;
+            z-index: -2;
+            pointer-events: none;
+            background-repeat: repeat;
+        }
+        body::before {
+            background-image:
+                radial-gradient(1.4px 1.4px at 12% 18%, #ffffff, transparent),
+                radial-gradient(1.2px 1.2px at 28% 62%, rgba(255,255,255,.85), transparent),
+                radial-gradient(1.6px 1.6px at 47% 33%, #d8f6ff, transparent),
+                radial-gradient(1.1px 1.1px at 63% 78%, rgba(255,255,255,.75), transparent),
+                radial-gradient(1.5px 1.5px at 78% 22%, #ffe9c2, transparent),
+                radial-gradient(1.2px 1.2px at 88% 56%, rgba(255,255,255,.80), transparent),
+                radial-gradient(1.3px 1.3px at 8% 86%, rgba(255,255,255,.70), transparent),
+                radial-gradient(1.7px 1.7px at 38% 92%, #d8f6ff, transparent),
+                radial-gradient(1.2px 1.2px at 70% 8%, rgba(255,255,255,.85), transparent),
+                radial-gradient(1.1px 1.1px at 95% 88%, rgba(255,255,255,.70), transparent);
+            background-size: 320px 320px;
+            animation: twinkle 5.5s ease-in-out infinite;
+        }
+        body::after {
+            background-image:
+                radial-gradient(1px 1px at 22% 28%, rgba(255,255,255,.70), transparent),
+                radial-gradient(1px 1px at 55% 12%, rgba(180,230,255,.70), transparent),
+                radial-gradient(1px 1px at 73% 47%, rgba(255,255,255,.60), transparent),
+                radial-gradient(1px 1px at 33% 70%, rgba(255,235,200,.60), transparent),
+                radial-gradient(1px 1px at 86% 74%, rgba(255,255,255,.65), transparent),
+                radial-gradient(1px 1px at 14% 52%, rgba(255,255,255,.55), transparent);
+            background-size: 210px 210px;
+            opacity: .7;
+            animation: twinkle 3.8s ease-in-out infinite reverse;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: .40; }
+            50%      { opacity: 1; }
+        }
+
+        /* ===== 글래스모피즘 게임 카드 ===== */
         .game-container {
-            background-color: rgba(45, 55, 72, 0.9); /* 컨테이너 배경 (약간 투명하게) */
-            padding: 30px;
-            border-radius: 15px; /* 둥근 모서리 */
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5); /* 그림자 */
+            position: relative;
+            background: linear-gradient(180deg, rgba(36, 44, 88, 0.55), rgba(14, 18, 42, 0.55));
+            backdrop-filter: blur(22px) saturate(150%);
+            -webkit-backdrop-filter: blur(22px) saturate(150%);
+            border: 1px solid var(--border-glass);
+            padding: 34px 30px;
+            border-radius: var(--radius-lg);
+            box-shadow:
+                0 30px 70px -25px rgba(0, 0, 0, 0.80),
+                0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+                0 1px 0 rgba(255, 255, 255, 0.12) inset;
             text-align: center;
-            max-width: 700px; /* 타임어택 모드 그리드를 위해 너비 증가 */
-            width: 100%; /* 모바일에서 전체 너비 사용 */
-            margin-top: 20px; /* 상단 여백 */
-            margin-bottom: 20px; /* 하단 여백 */
+            max-width: 700px;
+            width: 100%;
+            margin: 18px 0;
+            animation: rise-in .7s cubic-bezier(.2,.7,.2,1) both;
         }
-        /* 문제 설명/학습 정보 스타일 */
+        /* 카드 가장자리 그라데이션 글로우 라인 */
+        .game-container::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(140deg, var(--glow-cyan), transparent 35%, transparent 65%, var(--glow-violet));
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+            opacity: .55;
+            pointer-events: none;
+        }
+        @keyframes rise-in {
+            from { opacity: 0; transform: translateY(18px) scale(.99); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* ===== 타이틀 ===== */
+        .game-container h1 {
+            font-size: clamp(1.7rem, 5vw, 2.3rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 26px;
+            background: linear-gradient(100deg, var(--accent-cyan-soft) 0%, #ffffff 38%, var(--accent-violet) 72%, var(--accent-gold) 100%);
+            -webkit-background-clip: text;
+                    background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 2px 12px rgba(120, 90, 255, 0.28));
+        }
+
+        /* ===== 설명 / 학습 정보 패널 ===== */
         .description {
-            font-size: 0.9rem; /* 폰트 크기 더 작게 */
-            margin-bottom: 20px; /* 여백 조정 */
-            min-height: 60px; /* 정보 영역 최소 높이 확보 */
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 22px;
+            min-height: 60px;
             display: block;
             text-align: left;
-            line-height: 1.6;
             overflow-y: auto;
-            max-height: 600px; /* 최대 높이 600px로 설정 */
-            padding-right: 10px;
+            max-height: 600px;
+            padding: 16px 18px;
             word-break: keep-all;
             white-space: normal;
-            background-color: rgba(26, 32, 44, 0.7); /* 설명 영역 배경 */
-            border-radius: 8px;
-            padding: 10px;
+            color: var(--text-dim);
+            background: var(--surface-2);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            box-shadow: 0 1px 0 rgba(255,255,255,.05) inset;
         }
-
-        /* 학습 정보 항목 제목 스타일 */
         .description strong {
-            color: #9f7aea; /* 보라색 계열 */
+            color: var(--accent-gold);
             margin-right: 5px;
             display: inline;
-            font-weight: bold;
+            font-weight: 700;
         }
 
-        /* 별자리 이름 표시 스타일 (학습 모드) */
+        /* ===== 별자리 이름 (학습 모드) ===== */
         .constellation-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #63b3ed; /* 밝은 파란색 */
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            margin-bottom: 16px;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 22px var(--glow-cyan);
         }
-        /* 버튼 그리드 스타일 (퀴즈 모드) */
+
+        /* ===== 퀴즈 옵션 그리드 ===== */
         .options-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 반응형 그리드 */
-            gap: 15px; /* 버튼 간 간격 */
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
         }
-        /* 네비게이션 버튼 컨테이너 (학습 모드) */
+        /* ===== 모드 선택 바 ===== */
+        #mode-selection {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 26px;
+        }
+        /* ===== 네비게이션 버튼 (학습 모드) ===== */
         .nav-buttons {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 14px;
             margin-top: 20px;
         }
-        /* 버튼 스타일 */
+
+        /* ===== 버튼 공통 시스템 ===== */
         .option-button, .mode-button, .nav-button, .next-quiz-button, .time-attack-button, #start-time-attack-game-button, #restart-time-attack-button {
-            background-color: #4a5568; /* 버튼 배경 */
-            color: #e2e8f0; /* 버튼 글씨 */
-            padding: 12px 20px;
-            border-radius: 8px; /* 둥근 모서리 */
-            border: none;
+            font-family: inherit;
+            background: linear-gradient(180deg, rgba(60, 72, 130, 0.55), rgba(36, 44, 86, 0.55));
+            color: var(--text);
+            padding: 12px 22px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-glass);
             cursor: pointer;
             font-size: 1rem;
-            transition: background-color 0.3s ease, transform 0.1s ease; /* transform 추가 */
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 8px 20px -12px rgba(0,0,0,.80), 0 1px 0 rgba(255,255,255,.08) inset;
+            transition: transform .14s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease, color .25s ease;
         }
         .option-button:hover, .mode-button:hover, .nav-button:hover, .next-quiz-button:hover, .time-attack-button:hover, #start-time-attack-game-button:hover, #restart-time-attack-button:hover {
-            background-color: #636b7a; /* 호버 시 배경색 변경 */
+            transform: translateY(-2px);
+            border-color: var(--border-strong);
+            box-shadow: 0 14px 30px -14px rgba(0,0,0,.85), 0 0 22px -6px var(--glow-cyan), 0 1px 0 rgba(255,255,255,.12) inset;
+            color: #ffffff;
         }
         .option-button:active, .mode-button:active, .nav-button:active, .next-quiz-button:active, .time-attack-button:active, #start-time-attack-game-button:active, #restart-time-attack-button:active {
-            transform: scale(0.98); /* 클릭 시 약간 작아지는 효과 */
+            transform: translateY(0) scale(0.98);
+        }
+        /* 접근성: 키보드 포커스 링 */
+        .option-button:focus-visible, .mode-button:focus-visible, .nav-button:focus-visible, .next-quiz-button:focus-visible, .time-attack-button:focus-visible, #start-time-attack-game-button:focus-visible, #restart-time-attack-button:focus-visible, .constellation-list-item:focus-visible, #search-input:focus-visible {
+            outline: none;
+            box-shadow: var(--ring), 0 10px 26px -14px rgba(0,0,0,.85);
+        }
+
+        /* 모드 버튼: 알약형 */
+        .mode-button {
+            border-radius: 999px;
+            padding: 11px 20px;
         }
         .mode-button.selected {
-            background-color: #63b3ed; /* 선택된 모드 버튼 색상 */
-            color: #1a202c;
-            font-weight: bold;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+            color: #08122b;
+            border-color: transparent;
+            font-weight: 800;
+            box-shadow: 0 10px 26px -10px var(--glow-cyan), 0 0 0 1px rgba(255,255,255,.25) inset;
         }
-        /* 정답/오답 피드백 스타일 */
+        .mode-button.selected:hover { color: #08122b; }
+
+        /* 퀴즈: 답 선택 후 비활성화된 옵션 */
+        .option-button:disabled {
+            cursor: default;
+            opacity: 0.5;
+            transform: none;
+        }
+        .option-button:disabled:hover {
+            transform: none;
+            color: var(--text);
+            border-color: var(--border-glass);
+            box-shadow: 0 8px 20px -12px rgba(0,0,0,.80), 0 1px 0 rgba(255,255,255,.08) inset;
+        }
+
+        /* ===== 정답/오답 피드백 ===== */
         .feedback {
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-size: 1.15rem;
+            font-weight: 800;
             min-height: 30px;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
+            letter-spacing: -0.01em;
         }
-        .correct {
-            color: #48bb78; /* 초록색 (정답) */
-        }
-        .incorrect {
-            color: #f56565; /* 빨간색 (오답) */
-        }
-        /* 점수 스타일 */
+        .correct   { color: var(--correct);   text-shadow: 0 0 18px rgba(46, 230, 182, 0.40); }
+        .incorrect { color: var(--incorrect); text-shadow: 0 0 18px rgba(255, 125, 146, 0.40); }
+
+        /* ===== 점수 / 통계 ===== */
         .score, .time-attack-stats {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-dim);
             margin-top: 20px;
             margin-bottom: 15px;
         }
-        .time-attack-stats span {
-            margin: 0 10px;
+        .time-attack-stats span { margin: 0 10px; }
+        #current-score, #time-attack-timer, #time-attack-errors, #time-attack-remaining {
+            color: var(--accent-cyan);
+            font-weight: 800;
         }
+
         /* 숨김 처리 */
         .hidden {
             display: none !important; /* Important to override other display styles */
         }
 
-        /* 학습 모드 별자리 목록 그리드 스타일 */
+        /* ===== 학습 모드: 별자리 목록 그리드 ===== */
         .constellation-list-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 8px;
-            margin-bottom: 20px;
-            max-height: 180px; /* 높이 줄임 (기존 250px) */
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 22px;
+            max-height: 200px;
             overflow-y: auto;
-            padding: 10px;
-            background-color: rgba(45, 55, 72, 0.8); /* 배경 약간 투명하게 */
-            border-radius: 8px;
+            padding: 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
         }
-
-        /* 학습 모드 별자리 항목 스타일 */
         .constellation-list-item {
-            background-color: #4a5568;
-            color: #e2e8f0;
-            padding: 6px;
-            border-radius: 5px;
+            background: var(--surface-3);
+            color: var(--text);
+            padding: 9px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
             text-align: center;
-            transition: background-color 0.3s ease;
-            line-height: 1.1;
+            line-height: 1.25;
+            transition: transform .14s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
         }
-
         .constellation-list-item:hover {
-            background-color: #636b7a;
+            transform: translateY(-2px);
+            background: linear-gradient(180deg, rgba(79,227,255,.16), rgba(181,155,255,.12));
+            border-color: var(--border-strong);
+            box-shadow: 0 10px 22px -12px var(--glow-cyan);
         }
+        .constellation-list-item small { color: var(--text-faint); font-weight: 500; }
 
-        /* 학습 모드 이미지 스타일 */
+        /* ===== 학습 모드: 이미지 ===== */
+        .image-container { display: flex; justify-content: center; }
         .constellation-image {
             max-width: 100%;
             height: auto;
-            margin-top: 15px;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.1); /* 이미지 로딩 중 배경 */
+            margin-top: 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-glass);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.85);
         }
 
-        /* 타임어택 모드 그리드 스타일 */
+        /* ===== 검색창 ===== */
+        #search-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text);
+            background: var(--surface-2);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            transition: border-color .25s ease, box-shadow .25s ease, background .25s ease;
+        }
+        #search-input::placeholder { color: var(--text-faint); }
+        #search-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            background: rgba(12, 16, 38, 0.80);
+            box-shadow: var(--ring);
+        }
+
+        /* ===== 진행률 바 ===== */
+        #progress-bar { margin-bottom: 22px; }
+        #progress-bar > div {
+            background: var(--surface-2) !important;
+            border: 1px solid var(--border-glass);
+            border-radius: 999px;
+            overflow: hidden;
+            height: 16px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,.5);
+        }
+        #progress-fill {
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet)) !important;
+            height: 100%;
+            border-radius: 999px;
+            box-shadow: 0 0 16px var(--glow-cyan);
+            position: relative;
+            overflow: hidden;
+        }
+        #progress-fill::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.45) 50%, transparent 80%);
+            transform: translateX(-100%);
+            animation: progress-shine 2.4s ease-in-out infinite;
+        }
+        @keyframes progress-shine { to { transform: translateX(100%); } }
+        #progress-text { color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+
+        /* ===== 타임어택: 그리드 ===== */
         #time-attack-grid {
             display: grid;
             /* 열 개수는 JavaScript에서 동적으로 설정 */
-            gap: 5px; /* 버튼 간 간격 줄임 */
+            gap: 8px;
             margin-bottom: 20px;
-            max-height: 450px; /* 필요시 높이 조절 */
+            max-height: 460px;
             overflow-y: auto;
+            padding: 4px;
         }
-
         .time-attack-button {
-            padding: 8px 5px; /* 패딩 줄임 */
-            font-size: 0.7rem; /* 폰트 크기 줄임 */
-            text-overflow: ellipsis; /* 이름 길 경우 ... 처리 */
+            padding: 9px 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
             line-height: 1.2;
-            min-height: 40px; /* 버튼 최소 높이 보장 */
-            display: flex; /* Flexbox 사용하여 중앙 정렬 */
-            align-items: center; /* 수직 중앙 정렬 */
-            justify-content: center; /* 수평 중앙 정렬 */
+            min-height: 44px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
         .time-attack-button.solved {
-            background-color: #48bb78; /* 정답 맞춘 버튼 (초록색) */
-            color: #1a202c;
-            font-weight: bold;
+            background: linear-gradient(135deg, var(--correct), #16c79a);
+            color: #042018;
+            border-color: transparent;
+            font-weight: 800;
+            box-shadow: 0 8px 20px -10px rgba(46,230,182,.55), 0 0 0 1px rgba(255,255,255,.20) inset;
         }
-        .time-attack-button:disabled {
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
+        .time-attack-button.solved:hover { transform: none; color: #042018; }
+        .time-attack-button:disabled { cursor: not-allowed; opacity: 0.75; }
+
+        /* ===== 타임어택: 결과 ===== */
         #time-attack-results {
             margin-top: 20px;
-            font-size: 1.2rem;
-            line-height: 1.8;
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: var(--text-dim);
+            background: var(--surface-2);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 18px;
         }
-        /* 타임어택 옵션 스타일 */
+
+        /* ===== 타임어택: 옵션 ===== */
         #time-attack-options {
             margin-bottom: 20px;
-            padding: 15px;
-            background-color: rgba(26, 32, 44, 0.8); /* 옵션 배경 약간 투명하게 */
-            border-radius: 8px;
+            padding: 18px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
         }
         #time-attack-options fieldset {
-            border: 1px solid #4a5568;
-            padding: 10px;
+            border: 1px solid var(--border-glass);
+            padding: 14px;
             margin-bottom: 15px;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
         }
+        #time-attack-options fieldset:last-of-type { margin-bottom: 0; }
         #time-attack-options legend {
-            font-weight: bold;
-            color: #9f7aea;
-            padding: 0 5px;
+            font-weight: 800;
+            color: var(--accent-gold);
+            padding: 0 8px;
+            letter-spacing: -0.01em;
         }
         #time-attack-options label {
-            margin-right: 15px;
+            margin-right: 16px;
             cursor: pointer;
+            color: var(--text-dim);
+            font-weight: 600;
         }
-         #time-attack-options input[type="radio"] {
+        #time-attack-options input[type="radio"] {
             margin-right: 5px;
             cursor: pointer;
+            accent-color: var(--accent-cyan);
+            width: 15px;
+            height: 15px;
+            vertical-align: -2px;
         }
-        /* 뮤직 플레이어 컨테이너 스타일 - 수정됨 */
+
+        /* ===== 뮤직 플레이어 ===== */
         .game-audio-container {
             width: 100%;
-            max-width: 700px; /* 게임 컨테이너와 동일한 최대 너비 */
-            margin-top: 20px; /* 게임 컨테이너와의 간격 */
-            display: flex; /* 추가: Flexbox 사용 */
-            justify-content: center; /* 추가: 가로 중앙 정렬 */
+            max-width: 700px;
+            margin-top: 22px;
+            display: flex;
+            justify-content: center;
+            opacity: 0.9;
+        }
+
+        /* ===== 커스텀 스크롤바 ===== */
+        .description::-webkit-scrollbar,
+        .constellation-list-grid::-webkit-scrollbar,
+        #time-attack-grid::-webkit-scrollbar { width: 8px; height: 8px; }
+        .description::-webkit-scrollbar-thumb,
+        .constellation-list-grid::-webkit-scrollbar-thumb,
+        #time-attack-grid::-webkit-scrollbar-thumb {
+            background: rgba(150, 170, 255, 0.28);
+            border-radius: 999px;
+        }
+        .description::-webkit-scrollbar-track,
+        .constellation-list-grid::-webkit-scrollbar-track,
+        #time-attack-grid::-webkit-scrollbar-track { background: transparent; }
+
+        /* ===== 반응형 ===== */
+        @media (max-width: 480px) {
+            body { padding: 16px 12px 40px; }
+            .game-container { padding: 24px 18px; border-radius: 18px; }
+            .mode-button { padding: 10px 15px; font-size: 0.9rem; }
+            .options-grid { grid-template-columns: 1fr; }
+            .description { font-size: 0.9rem; }
+            .nav-buttons { gap: 10px; }
+        }
+
+        /* ===== 모션 최소화 선호 ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
         }
 
     </style>
@@ -1013,10 +1299,10 @@
             
             if (bookmarkedConstellations.includes(englishName)) {
                 bookmarkButton.textContent = '북마크 해제';
-                bookmarkButton.style.backgroundColor = '#f56565';
+                bookmarkButton.style.backgroundColor = 'var(--bookmark-on)';
             } else {
                 bookmarkButton.textContent = '북마크';
-                bookmarkButton.style.backgroundColor = '#4a5568';
+                bookmarkButton.style.backgroundColor = '';
             }
         }
         
