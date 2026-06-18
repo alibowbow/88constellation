@@ -218,6 +218,54 @@
             border-radius: var(--radius);
             box-shadow: 0 1px 0 rgba(255,255,255,.05) inset;
         }
+
+        /* ===== 학습 정보 카드 (콘텐츠 보강) ===== */
+        .info-lead {
+            margin: 0 0 16px;
+            color: var(--text);
+            font-size: 0.97rem;
+            line-height: 1.75;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 14px;
+            margin-bottom: 18px;
+        }
+        .info-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 11px 14px;
+            background: var(--surface-3);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+        }
+        .info-key {
+            font-size: 0.7rem;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+        .info-val {
+            font-size: 0.93rem;
+            color: var(--text);
+            line-height: 1.45;
+            word-break: keep-all;
+        }
+        .info-block { margin-bottom: 15px; }
+        .info-block:last-child { margin-bottom: 0; }
+        .info-block .info-key { display: block; margin-bottom: 6px; }
+        .info-text {
+            margin: 0;
+            color: var(--text-dim);
+            line-height: 1.72;
+            word-break: keep-all;
+        }
+        @media (max-width: 560px) {
+            .info-grid { grid-template-columns: 1fr; }
+        }
         .description strong {
             color: var(--accent-gold);
             margin-right: 5px;
@@ -952,13 +1000,109 @@
             "Vulpecula": "https://www.shutterstock.com/image-illustration/Vulpecula-88-constellations-astronomy-series-260nw-1903187311.jpg"
         };
 
-        // 별자리 데이터에 이미지 URL 업데이트 (기존과 동일)
+        // === 콘텐츠 보강 데이터: 약어(IAU)·이름 뜻·대표 별·주요 천체·분류·흥미로운 사실 ===
+        // hemi: 북/남 (필터용 대략 구분) · zod: 황도12궁 여부 · seas: 한국에서 관측 적기(계절)
+        const constellationExtras = {
+            "Andromeda": { abbr:"And", mean:"사슬에 묶인 공주", star:"알페라츠 (Alpheratz, α, 2.1등급)", deep:"M31 안드로메다 은하, M32·M110", hemi:"북", zod:false, seas:["가을","겨울"], fact:"안드로메다 은하(M31)는 맨눈으로 볼 수 있는 가장 먼 천체로, 약 250만 광년 떨어져 있습니다." },
+            "Antlia": { abbr:"Ant", mean:"공기 펌프", star:"α 안틀리아이 (α Antliae)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:["봄"], fact:"18세기 라카유가 진공 펌프를 기려 만든 근대 별자리입니다." },
+            "Apus": { abbr:"Aps", mean:"극락조", star:"α 아포디스 (α Apodis)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"천구 남극 부근에 있어 한국에서는 보기 어렵습니다." },
+            "Aquarius": { abbr:"Aqr", mean:"물병을 든 사람", star:"사달수드 (Sadalsuud, β, 2.9등급)", deep:"나선 성운(NGC 7293), M2 구상성단", hemi:"남", zod:true, seas:["가을"], fact:"물병에서 쏟아지는 물줄기가 남쪽물고기자리의 입으로 흘러듭니다." },
+            "Aquila": { abbr:"Aql", mean:"독수리", star:"알타이르 (Altair, α, 0.8등급)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["여름"], fact:"알타이르(견우성)는 여름철 대삼각형의 한 꼭짓점입니다." },
+            "Ara": { abbr:"Ara", mean:"제단", star:"β 아라이 (β Arae)", deep:"NGC 6193 산개성단", hemi:"남", zod:false, seas:[], fact:"전갈자리 남쪽 은하수 속에 자리한 남천 별자리입니다." },
+            "Aries": { abbr:"Ari", mean:"숫양", star:"하말 (Hamal, α, 2.0등급)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:true, seas:["가을","겨울"], fact:"황금 양피 신화의 양으로, 한때 춘분점이 이 별자리에 있었습니다." },
+            "Auriga": { abbr:"Aur", mean:"마차부", star:"카펠라 (Capella, α, 0.1등급)", deep:"M36·M37·M38 산개성단", hemi:"북", zod:false, seas:["겨울"], fact:"오각형 모양이며, 카펠라는 겨울철 가장 밝은 별 중 하나입니다." },
+            "Bootes": { abbr:"Boo", mean:"목동(소몰이꾼)", star:"아르크투루스 (Arcturus, α, -0.05등급)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["봄"], fact:"아르크투루스는 봄철 가장 밝고, 북천에서 가장 밝은 항성입니다." },
+            "Caelum": { abbr:"Cae", mean:"조각칼", star:"α 카일리 (α Caeli)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"라카유가 만든 매우 작고 어두운 근대 별자리입니다." },
+            "Camelopardalis": { abbr:"Cam", mean:"기린", star:"β 카멜로파르달리스 (β Cam)", deep:"NGC 1502 산개성단", hemi:"북", zod:false, seas:["겨울"], fact:"이름은 '표범 무늬 낙타' 곧 기린을 뜻하며 밝은 별이 거의 없습니다." },
+            "Cancer": { abbr:"Cnc", mean:"게", star:"타르프 (Tarf, β, 3.5등급)", deep:"M44 프레세페(벌집) 성단, M67", hemi:"북", zod:true, seas:["봄"], fact:"황도12궁 중 가장 어둡지만 맨눈으로 보이는 벌집 성단(M44)이 있습니다." },
+            "Canes Venatici": { abbr:"CVn", mean:"사냥개들", star:"코르 카롤리 (Cor Caroli, α, 2.9등급)", deep:"M3 구상성단, M51 부자(소용돌이) 은하", hemi:"북", zod:false, seas:["봄"], fact:"소용돌이 은하 M51은 나선 구조가 또렷이 보이는 대표 은하입니다." },
+            "Canis Major": { abbr:"CMa", mean:"큰 개", star:"시리우스 (Sirius, α, -1.46등급)", deep:"M41 산개성단", hemi:"남", zod:false, seas:["겨울"], fact:"시리우스는 밤하늘에서 가장 밝은 항성입니다." },
+            "Canis Minor": { abbr:"CMi", mean:"작은 개", star:"프로키온 (Procyon, α, 0.3등급)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["겨울"], fact:"프로키온은 겨울철 대삼각형의 한 꼭짓점입니다." },
+            "Capricornus": { abbr:"Cap", mean:"바다염소", star:"데네브 알게디 (Deneb Algedi, δ, 2.9등급)", deep:"M30 구상성단", hemi:"남", zod:true, seas:["가을"], fact:"상반신은 염소, 하반신은 물고기인 '바다염소' 모습의 황도12궁입니다." },
+            "Carina": { abbr:"Car", mean:"(배의) 용골", star:"카노푸스 (Canopus, α, -0.74등급)", deep:"용골자리 성운(NGC 3372), NGC 2516", hemi:"남", zod:false, seas:[], fact:"카노푸스는 시리우스 다음으로 밝은 항성이며, 옛 아르고자리의 일부였습니다." },
+            "Cassiopeia": { abbr:"Cas", mean:"(왕비) 카시오페이아", star:"시더 (Schedar, α, 2.2등급)", deep:"M52·M103 산개성단", hemi:"북", zod:false, seas:["가을","겨울"], fact:"W(또는 M)자 모양으로 북극성을 찾는 길잡이가 됩니다." },
+            "Centaurus": { abbr:"Cen", mean:"켄타우로스", star:"리길 켄타우루스 (Rigil Kentaurus, α, -0.27등급)", deep:"ω 센타우리 구상성단(NGC 5139), 켄타우루스 A", hemi:"남", zod:false, seas:["봄"], fact:"알파 센타우리는 태양에서 가장 가까운 항성계(약 4.4광년)입니다." },
+            "Cepheus": { abbr:"Cep", mean:"(왕) 케페우스", star:"알데라민 (Alderamin, α, 2.5등급)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["가을","겨울"], fact:"변광성의 기준이 된 세페이드 변광성(δ Cephei)이 있습니다." },
+            "Cetus": { abbr:"Cet", mean:"고래/바다 괴물", star:"디프다 (Diphda, β, 2.0등급)", deep:"M77 은하", hemi:"남", zod:false, seas:["가을"], fact:"장주기 변광성의 대표 '미라(Mira)'가 있는 거대한 별자리입니다." },
+            "Chamaeleon": { abbr:"Cha", mean:"카멜레온", star:"α 카마이레온티스 (α Chamaeleontis)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"천구 남극 부근의 작은 남천 별자리입니다." },
+            "Circinus": { abbr:"Cir", mean:"(제도용) 컴퍼스", star:"α 키르키니 (α Circini)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"알파 센타우리 곁에 있는 라카유의 작은 근대 별자리입니다." },
+            "Columba": { abbr:"Col", mean:"비둘기", star:"파크트 (Phact, α, 2.6등급)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:["겨울"], fact:"노아의 방주 또는 아르고호의 비둘기로 여겨집니다." },
+            "Coma Berenices": { abbr:"Com", mean:"베레니케의 머리카락", star:"β 코마이 (β Comae)", deep:"멜로테 111 성단, M64 검은눈 은하", hemi:"북", zod:false, seas:["봄"], fact:"실존 인물(베레니케 2세 왕비)의 머리카락에서 유래한 유일한 별자리입니다." },
+            "Corona Australis": { abbr:"CrA", mean:"남쪽 왕관", star:"α/β 코로나이 아우스트랄리스", deep:"NGC 6541 구상성단", hemi:"남", zod:false, seas:["여름"], fact:"궁수자리 아래에 놓인 작은 반원형 별자리입니다." },
+            "Corona Borealis": { abbr:"CrB", mean:"북쪽 왕관", star:"알페카 (Alphecca/Gemma, α, 2.2등급)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["봄","여름"], fact:"반원으로 늘어선 별들이 보석 박힌 왕관처럼 보입니다." },
+            "Corvus": { abbr:"Crv", mean:"까마귀", star:"기에나 (Gienah, γ, 2.6등급)", deep:"안테나 은하(NGC 4038/9)", hemi:"남", zod:false, seas:["봄"], fact:"네 별이 이루는 사다리꼴이 봄철 남쪽 하늘에서 눈에 띕니다." },
+            "Crater": { abbr:"Crt", mean:"(술)잔", star:"δ 크라테리스 (δ Crateris)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:["봄"], fact:"아폴론 신화에 나오는 잔을 나타내는 어두운 별자리입니다." },
+            "Crux": { abbr:"Cru", mean:"남십자가", star:"아크룩스 (Acrux, α, 0.8등급)", deep:"보석상자 성단(NGC 4755), 석탄자루 암흑성운", hemi:"남", zod:false, seas:[], fact:"88개 별자리 중 가장 작지만 남반구에서 남쪽을 찾는 길잡이입니다." },
+            "Cygnus": { abbr:"Cyg", mean:"백조", star:"데네브 (Deneb, α, 1.3등급)", deep:"북아메리카 성운(NGC 7000), 베일 성운", hemi:"북", zod:false, seas:["여름","가을"], fact:"데네브는 여름철 대삼각형의 꼭짓점이며 '북쪽 십자가'로도 불립니다." },
+            "Delphinus": { abbr:"Del", mean:"돌고래", star:"로타네브 (Rotanev, β)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["여름","가을"], fact:"작지만 돌고래가 뛰어오르는 모양이 또렷합니다." },
+            "Dorado": { abbr:"Dor", mean:"황새치(돛새치)", star:"α 도라두스 (α Doradus)", deep:"대마젤란 은하(LMC), 타란툴라 성운", hemi:"남", zod:false, seas:[], fact:"이웃 은하인 대마젤란 은하의 대부분을 품고 있습니다." },
+            "Draco": { abbr:"Dra", mean:"용", star:"엘타닌 (Eltanin, γ, 2.2등급)", deep:"고양이눈 성운(NGC 6543)", hemi:"북", zod:false, seas:["여름"], fact:"약 4700년 전에는 투반(α Dra)이 북극성이었습니다." },
+            "Equuleus": { abbr:"Equ", mean:"조랑말", star:"키탈파 (Kitalpha, α)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["가을"], fact:"88개 별자리 중 두 번째로 작은 별자리입니다." },
+            "Eridanus": { abbr:"Eri", mean:"(강) 에리다누스", star:"아케르나르 (Achernar, α, 0.5등급)", deep:"NGC 1535 행성상성운", hemi:"남", zod:false, seas:["겨울"], fact:"남쪽 끝 별 아케르나르는 매우 빠르게 자전해 찌그러진 별입니다." },
+            "Fornax": { abbr:"For", mean:"화로", star:"α 포르나키스 (α Fornacis)", deep:"화로자리 은하단, NGC 1097", hemi:"남", zod:false, seas:["가을","겨울"], fact:"멀리 있는 은하들이 많이 관측되는 라카유의 별자리입니다." },
+            "Gemini": { abbr:"Gem", mean:"쌍둥이", star:"폴룩스 (Pollux, β, 1.1등급)", deep:"M35 산개성단, 에스키모 성운", hemi:"북", zod:true, seas:["겨울"], fact:"가장 밝은 별이 알파(카스토르)가 아니라 베타(폴룩스)입니다." },
+            "Grus": { abbr:"Gru", mean:"두루미(학)", star:"알 나이르 (Alnair, α, 1.7등급)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:["가을"], fact:"16세기에 만들어진 남천의 새 별자리 중 하나입니다." },
+            "Hercules": { abbr:"Her", mean:"헤라클레스", star:"코르네포로스 (Kornephoros, β, 2.8등급)", deep:"M13 구상성단, M92", hemi:"북", zod:false, seas:["여름"], fact:"M13은 북반구에서 가장 밝고 멋진 구상성단으로 꼽힙니다." },
+            "Horologium": { abbr:"Hor", mean:"(추)시계", star:"α 호롤로기이 (α Horologii)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"라카유가 진자시계를 기려 만든 가늘고 긴 별자리입니다." },
+            "Hydra": { abbr:"Hya", mean:"바다뱀 히드라", star:"알파르드 (Alphard, α, 2.0등급)", deep:"M83 남쪽바람개비 은하, M48 산개성단", hemi:"남", zod:false, seas:["봄"], fact:"88개 별자리 중 가장 크고 가장 길게 늘어진 별자리입니다." },
+            "Hydrus": { abbr:"Hyi", mean:"(작은) 물뱀", star:"β 히드리 (β Hydri)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"두 마젤란 은하 사이에 자리한 남천 별자리입니다." },
+            "Indus": { abbr:"Ind", mean:"인디언(원주민)", star:"α 인디 (α Indi)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"대항해 시대에 만들어진 남천 별자리입니다." },
+            "Lacerta": { abbr:"Lac", mean:"도마뱀", star:"α 라케르타이 (α Lacertae)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["가을"], fact:"헤벨리우스가 만든 작고 지그재그 모양의 별자리입니다." },
+            "Leo": { abbr:"Leo", mean:"사자", star:"레굴루스 (Regulus, α, 1.4등급)", deep:"사자자리 삼중주(M65·M66·NGC 3628), M95·M96", hemi:"북", zod:true, seas:["봄"], fact:"낫(물음표) 모양 별 무리가 사자의 머리와 갈기를 이룹니다." },
+            "Leo Minor": { abbr:"LMi", mean:"작은 사자", star:"프라이키푸아 (46 LMi)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["봄"], fact:"큰 사자자리와 큰곰자리 사이의 작고 어두운 별자리입니다." },
+            "Lepus": { abbr:"Lep", mean:"토끼", star:"아르네브 (Arneb, α, 2.6등급)", deep:"M79 구상성단", hemi:"남", zod:false, seas:["겨울"], fact:"오리온의 발치에서 사냥개에게 쫓기는 토끼입니다." },
+            "Libra": { abbr:"Lib", mean:"천칭(저울)", star:"주벤에스카말리 (Zubeneschamali, β, 2.6등급)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:true, seas:["여름"], fact:"원래 전갈자리의 집게발이었으며 별 이름에 그 흔적이 남아 있습니다." },
+            "Lupus": { abbr:"Lup", mean:"늑대", star:"α 루피 (α Lupi)", deep:"NGC 5822 산개성단", hemi:"남", zod:false, seas:["여름"], fact:"켄타우로스가 창으로 찌른 짐승으로 여겨지는 남천 별자리입니다." },
+            "Lynx": { abbr:"Lyn", mean:"스라소니", star:"α 린키스 (α Lyncis)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["봄","겨울"], fact:"'스라소니의 눈처럼 밝아야 볼 수 있다'는 농담에서 이름이 붙었습니다." },
+            "Lyra": { abbr:"Lyr", mean:"거문고(리라)", star:"베가 (Vega, α, 0.03등급)", deep:"고리 성운(M57), M56 구상성단", hemi:"북", zod:false, seas:["여름"], fact:"베가(직녀성)는 여름철 대삼각형에서 가장 밝은 꼭짓점입니다." },
+            "Mensa": { abbr:"Men", mean:"테이블 산", star:"α 멘사이 (α Mensae)", deep:"대마젤란 은하 일부", hemi:"남", zod:false, seas:[], fact:"밝은 별이 거의 없는 별자리로, 남아프리카 테이블산에서 이름을 땄습니다." },
+            "Microscopium": { abbr:"Mic", mean:"현미경", star:"γ 미크로스코피이 (γ Microscopii)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:["가을"], fact:"라카유가 만든 어두운 근대 별자리입니다." },
+            "Monoceros": { abbr:"Mon", mean:"외뿔소(유니콘)", star:"β 모노케로티스 (β Monocerotis)", deep:"장미 성운, 크리스마스트리 성단(NGC 2264)", hemi:"남", zod:false, seas:["겨울"], fact:"어둡지만 은하수 속에 있어 아름다운 성운·성단이 많습니다." },
+            "Musca": { abbr:"Mus", mean:"파리", star:"α 무스카이 (α Muscae)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"남십자자리 근처의 작은 곤충 별자리입니다." },
+            "Norma": { abbr:"Nor", mean:"직각자", star:"γ² 노르마이 (γ² Normae)", deep:"NGC 6087 산개성단", hemi:"남", zod:false, seas:[], fact:"은하수의 풍부한 별밭에 자리한 라카유의 작은 별자리입니다." },
+            "Octans": { abbr:"Oct", mean:"팔분의", star:"ν 옥탄티스 (ν Octantis)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"천구 남극을 품고 있지만 남극 부근에 밝은 별이 없습니다." },
+            "Ophiuchus": { abbr:"Oph", mean:"뱀주인(땅꾼)", star:"라스알하게 (Rasalhague, α, 2.1등급)", deep:"M10·M12 구상성단", hemi:"남", zod:false, seas:["여름"], fact:"태양이 지나가지만 황도12궁에 들지 않는 '13번째 별자리'로 유명합니다." },
+            "Orion": { abbr:"Ori", mean:"사냥꾼 오리온", star:"리겔 (Rigel, β, 0.1등급)", deep:"오리온 대성운(M42), 말머리성운", hemi:"북", zod:false, seas:["겨울"], fact:"오리온 대성운(M42)은 맨눈으로도 보이는 별의 탄생지입니다." },
+            "Pavo": { abbr:"Pav", mean:"공작", star:"피코크 (Peacock, α, 1.9등급)", deep:"NGC 6752 구상성단", hemi:"남", zod:false, seas:[], fact:"알파별 이름이 '피코크(공작)'인 남천의 새 별자리입니다." },
+            "Pegasus": { abbr:"Peg", mean:"(천마) 페가수스", star:"에니프 (Enif, ε, 2.4등급)", deep:"M15 구상성단", hemi:"북", zod:false, seas:["가을"], fact:"'페가수스 사각형'은 가을철 하늘을 찾는 기준이 됩니다." },
+            "Perseus": { abbr:"Per", mean:"영웅 페르세우스", star:"미르파크 (Mirfak, α, 1.8등급)", deep:"이중성단(NGC 869·884), 캘리포니아 성운", hemi:"북", zod:false, seas:["가을","겨울"], fact:"식변광성의 대표 '알골(Algol)'과 페르세우스 유성우의 복사점이 있습니다." },
+            "Phoenix": { abbr:"Phe", mean:"불사조", star:"안카 (Ankaa, α, 2.4등급)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:["가을"], fact:"남천의 새 별자리 중 크고 밝은 편입니다." },
+            "Pictor": { abbr:"Pic", mean:"화가의 이젤", star:"α 픽토리스 (α Pictoris)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"베타 픽토리스(β Pic)는 원시 행성 원반으로 유명합니다." },
+            "Pisces": { abbr:"Psc", mean:"물고기 두 마리", star:"알레니드 (Alrescha, α)", deep:"M74 은하", hemi:"북", zod:true, seas:["가을"], fact:"현재 춘분점이 위치한 별자리로, 끈에 묶인 두 물고기를 나타냅니다." },
+            "Piscis Austrinus": { abbr:"PsA", mean:"남쪽 물고기", star:"포말하우트 (Fomalhaut, α, 1.2등급)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:["가을"], fact:"포말하우트는 '가을의 외로운 별'로 불리며 먼지 원반으로 유명합니다." },
+            "Puppis": { abbr:"Pup", mean:"(배의) 고물", star:"나오스 (Naos, ζ, 2.2등급)", deep:"M46·M47 산개성단", hemi:"남", zod:false, seas:["겨울"], fact:"옛 아르고자리에서 갈라져 나온 은하수 속 별자리입니다." },
+            "Pyxis": { abbr:"Pyx", mean:"나침반", star:"α 픽시디스 (α Pyxidis)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:["봄"], fact:"아르고호의 나침반을 나타내는 작은 별자리입니다." },
+            "Reticulum": { abbr:"Ret", mean:"그물망(레티클)", star:"α 레티쿨리 (α Reticuli)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"망원경 십자선(레티클)을 본떠 만든 작은 남천 별자리입니다." },
+            "Sagitta": { abbr:"Sge", mean:"화살", star:"γ 사기타이 (γ Sagittae)", deep:"M71 구상성단", hemi:"북", zod:false, seas:["여름"], fact:"88개 별자리 중 세 번째로 작은 별자리입니다." },
+            "Sagittarius": { abbr:"Sgr", mean:"궁수", star:"카우스 아우스트랄리스 (Kaus Australis, ε, 1.8등급)", deep:"M8 석호성운, M20 삼렬성운, M17·M22", hemi:"남", zod:true, seas:["여름"], fact:"이 방향에 우리 은하의 중심이 있어 은하수가 가장 짙습니다." },
+            "Scorpius": { abbr:"Sco", mean:"전갈", star:"안타레스 (Antares, α, 약 1.0등급)", deep:"M6 나비성단, M7 산개성단", hemi:"남", zod:true, seas:["여름"], fact:"붉은 초거성 안타레스는 '화성의 라이벌'이라는 뜻입니다." },
+            "Sculptor": { abbr:"Scl", mean:"조각가의 도구", star:"α 스쿨프토리스 (α Sculptoris)", deep:"조각가자리 은하(NGC 253)", hemi:"남", zod:false, seas:["가을"], fact:"우리 은하의 남극(은하 남극)이 이 별자리 안에 있습니다." },
+            "Scutum": { abbr:"Sct", mean:"방패", star:"α 스쿠티 (α Scuti)", deep:"M11 야생오리 성단", hemi:"남", zod:false, seas:["여름"], fact:"폴란드 왕을 기려 만든 작은 별자리로 화려한 별구름이 있습니다." },
+            "Serpens": { abbr:"Ser", mean:"뱀", star:"우누칼하이 (Unukalhai, α, 2.6등급)", deep:"M5 구상성단, 독수리 성운(M16)", hemi:"북", zod:false, seas:["여름"], fact:"뱀주인자리에 의해 머리와 꼬리 둘로 나뉜 유일한 별자리입니다." },
+            "Sextans": { abbr:"Sex", mean:"육분의", star:"α 섹스탄티스 (α Sextantis)", deep:"NGC 3115 스핀들 은하", hemi:"남", zod:false, seas:["봄"], fact:"헤벨리우스가 자신의 관측기구 육분의를 기려 만들었습니다." },
+            "Taurus": { abbr:"Tau", mean:"황소", star:"알데바란 (Aldebaran, α, 0.9등급)", deep:"플레이아데스(M45), 히아데스, 게성운(M1)", hemi:"북", zod:true, seas:["겨울"], fact:"붉은 눈 알데바란과 좀생이별 플레이아데스(M45)가 유명합니다." },
+            "Telescopium": { abbr:"Tel", mean:"망원경", star:"α 텔레스코피이 (α Telescopii)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"라카유가 만든 어두운 남천 별자리입니다." },
+            "Triangulum": { abbr:"Tri", mean:"삼각형", star:"β 트리안굴리 (β Trianguli)", deep:"삼각형자리 은하(M33)", hemi:"북", zod:false, seas:["가을"], fact:"M33은 국부은하군에서 세 번째로 큰 나선은하입니다." },
+            "Triangulum Australe": { abbr:"TrA", mean:"남쪽 삼각형", star:"아트리아 (Atria, α, 1.9등급)", deep:"NGC 6025 산개성단", hemi:"남", zod:false, seas:[], fact:"북쪽 삼각형자리보다 밝고 또렷한 남천의 삼각형입니다." },
+            "Tucana": { abbr:"Tuc", mean:"큰부리새(투칸)", star:"α 투카나이 (α Tucanae)", deep:"소마젤란 은하(SMC), 47 투카나에(NGC 104)", hemi:"남", zod:false, seas:[], fact:"소마젤란 은하와 멋진 구상성단 47 Tuc를 품고 있습니다." },
+            "Ursa Major": { abbr:"UMa", mean:"큰 곰", star:"알리오트 (Alioth, ε, 1.8등급)", deep:"M81·M82 은하, 부엉이 성운(M97), M101", hemi:"북", zod:false, seas:["봄"], fact:"꼬리의 일곱 별 '북두칠성'으로 북극성을 찾는 길잡이입니다." },
+            "Ursa Minor": { abbr:"UMi", mean:"작은 곰", star:"폴라리스 (Polaris, α, 2.0등급)", deep:"뚜렷한 심원천체는 적음", hemi:"북", zod:false, seas:["여름"], fact:"꼬리 끝의 폴라리스가 바로 현재의 북극성입니다." },
+            "Vela": { abbr:"Vel", mean:"(배의) 돛", star:"γ 벨로룸 (γ Velorum, 1.8등급)", deep:"돛자리 초신성 잔해, NGC 3201", hemi:"남", zod:false, seas:[], fact:"옛 아르고자리의 돛 부분으로 초신성 잔해가 펼쳐져 있습니다." },
+            "Virgo": { abbr:"Vir", mean:"처녀(여신)", star:"스피카 (Spica, α, 1.0등급)", deep:"처녀자리 은하단, 솜브레로 은하(M104), M87", hemi:"남", zod:true, seas:["봄"], fact:"수많은 은하가 모인 처녀자리 은하단의 중심 방향입니다." },
+            "Volans": { abbr:"Vol", mean:"날치", star:"β 볼란티스 (β Volantis)", deep:"뚜렷한 심원천체는 적음", hemi:"남", zod:false, seas:[], fact:"용골자리 근처를 헤엄치는 작은 날치 별자리입니다." },
+            "Vulpecula": { abbr:"Vul", mean:"여우", star:"안세르 (Anser, α)", deep:"아령 성운(M27)", hemi:"북", zod:false, seas:["여름"], fact:"최초로 발견된 행성상성운인 아령 성운(M27)이 있습니다." }
+        };
+
+        // 별자리 데이터에 이미지 URL + 보강 정보 병합
         constellations.forEach(constellation => {
             const englishNameMatch = constellation.name.match(/\((.*?)\)/);
             if (englishNameMatch && englishNameMatch[1]) {
                 const englishName = englishNameMatch[1];
                 if (imageUrlMap[englishName]) {
                     constellation.imageUrl = imageUrlMap[englishName];
+                }
+                if (constellationExtras[englishName]) {
+                    Object.assign(constellation, constellationExtras[englishName]);
                 }
             }
         });
@@ -1145,11 +1289,26 @@
             const constellation = constellationsSortedEnglish[index];
             constellationNameElement.textContent = constellation.name;
 
-            let learnDescriptionHTML = ``;
-            if (constellation.season) learnDescriptionHTML += `<strong>계절:</strong> ${constellation.season}<br>`;
-            if (constellation.location) learnDescriptionHTML += `<strong>위치:</strong> ${constellation.location}<br>`;
-            if (constellation.story) learnDescriptionHTML += `<strong>이야기:</strong> ${constellation.story}<br>`;
-            if (constellation.characteristics) learnDescriptionHTML += `<strong>특징:</strong> ${constellation.characteristics}<br>`;
+            const infoRow = (label, value) => value
+                ? `<div class="info-row"><span class="info-key">${label}</span><span class="info-val">${value}</span></div>`
+                : '';
+            const infoBlock = (label, value) => value
+                ? `<div class="info-block"><span class="info-key">${label}</span><p class="info-text">${value}</p></div>`
+                : '';
+
+            let learnDescriptionHTML = '';
+            if (constellation.description) learnDescriptionHTML += `<p class="info-lead">${constellation.description}</p>`;
+            learnDescriptionHTML += '<div class="info-grid">';
+            learnDescriptionHTML += infoRow('약어 (IAU)', constellation.abbr);
+            learnDescriptionHTML += infoRow('이름의 뜻', constellation.mean);
+            learnDescriptionHTML += infoRow('대표 별', constellation.star);
+            learnDescriptionHTML += infoRow('주요 천체', constellation.deep);
+            learnDescriptionHTML += infoRow('관측 계절', constellation.season);
+            learnDescriptionHTML += infoRow('위치', constellation.location);
+            learnDescriptionHTML += '</div>';
+            learnDescriptionHTML += infoBlock('이야기', constellation.story);
+            learnDescriptionHTML += infoBlock('특징', constellation.characteristics);
+            learnDescriptionHTML += infoBlock('흥미로운 사실', constellation.fact);
             descriptionElement.innerHTML = learnDescriptionHTML || '추가 정보가 없습니다.';
 
             imageContainerElement.innerHTML = '';
