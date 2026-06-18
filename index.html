@@ -299,6 +299,17 @@
             font-weight: 700;
         }
         .filter-chip:focus-visible { outline: none; box-shadow: var(--ring); }
+
+        /* ===== 퀴즈 문제 강조 ===== */
+        .quiz-clue { color: var(--accent-cyan-soft); font-weight: 600; }
+        .quiz-bignote {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--accent-gold);
+        }
         .description strong {
             color: var(--accent-gold);
             margin-right: 5px;
@@ -1174,6 +1185,8 @@
         let currentLearnConstellationIndex = 0;
         let currentLearnFilter = 'all';
         let currentQuizConstellation = null;
+        let currentQuizType = 'desc';
+        let currentQuizAnswer = null;
         let quizCorrectAnswers = 0;
         let quizTotalQuestions = 0;
         let quizGameActive = false;
@@ -1395,28 +1408,59 @@
             nextQuizRound();
         }
 
+        // 퀴즈 문제 유형 (설명 문제 비중을 높여 난이도 균형 유지)
+        const QUIZ_TYPES = ['desc', 'desc', 'star', 'abbr', 'meaning', 'reverseStar'];
+
         function nextQuizRound() {
             if (!quizGameActive) return;
             feedbackElement.textContent = '';
             feedbackElement.classList.remove('correct', 'incorrect');
             nextQuizButton.classList.add('hidden');
 
-            const randomIndex = Math.floor(Math.random() * constellations.length);
-            currentQuizConstellation = constellations[randomIndex];
-            descriptionElement.innerHTML = `<strong>다음 별자리에 대한 설명입니다:</strong><br>${currentQuizConstellation.description}`;
+            const target = constellations[Math.floor(Math.random() * constellations.length)];
+            currentQuizConstellation = target;
+            currentQuizType = QUIZ_TYPES[Math.floor(Math.random() * QUIZ_TYPES.length)];
+
+            let promptHTML;
+            let optionPool = 'names';
+            switch (currentQuizType) {
+                case 'star':
+                    promptHTML = `<strong>대표 별이 다음과 같은 별자리는?</strong><br><span class="quiz-clue">${target.star}</span>`;
+                    currentQuizAnswer = target.name;
+                    break;
+                case 'abbr':
+                    promptHTML = `<strong>다음 IAU 약어를 쓰는 별자리는?</strong><br><span class="quiz-bignote">${target.abbr}</span>`;
+                    currentQuizAnswer = target.name;
+                    break;
+                case 'meaning':
+                    promptHTML = `<strong>이름의 뜻이 '<span class="quiz-clue">${target.mean}</span>'인 별자리는?</strong>`;
+                    currentQuizAnswer = target.name;
+                    break;
+                case 'reverseStar':
+                    promptHTML = `<strong>'${target.name}'의 대표 별은?</strong>`;
+                    currentQuizAnswer = target.star;
+                    optionPool = 'stars';
+                    break;
+                default: // 'desc'
+                    promptHTML = `<strong>다음 설명에 해당하는 별자리는?</strong><br>${target.description}`;
+                    currentQuizAnswer = target.name;
+            }
+
+            descriptionElement.innerHTML = promptHTML;
             imageContainerElement.classList.add('hidden');
-            generateQuizOptions();
+            generateQuizOptions(optionPool);
         }
 
-        function generateQuizOptions() {
+        function generateQuizOptions(optionPool) {
             optionsElement.innerHTML = '';
-            const correctOption = currentQuizConstellation.name;
-            const options = [correctOption];
-
-            while (options.length < 4) {
-                const randomConstellation = constellations[Math.floor(Math.random() * constellations.length)];
-                if (!options.includes(randomConstellation.name)) {
-                    options.push(randomConstellation.name);
+            const options = [currentQuizAnswer];
+            let guard = 0;
+            while (options.length < 4 && guard < 800) {
+                guard++;
+                const rc = constellations[Math.floor(Math.random() * constellations.length)];
+                const candidate = optionPool === 'stars' ? rc.star : rc.name;
+                if (candidate && !options.includes(candidate)) {
+                    options.push(candidate);
                 }
             }
             shuffleArray(options).forEach(option => {
@@ -1434,13 +1478,13 @@
 
             quizTotalQuestions++;
 
-            if (selectedOption === currentQuizConstellation.name) {
+            if (selectedOption === currentQuizAnswer) {
                 feedbackElement.textContent = '정답입니다!';
                 feedbackElement.classList.add('correct');
                 quizCorrectAnswers++;
                 playSound('correct');
             } else {
-                feedbackElement.textContent = `틀렸습니다! 정답은 ${currentQuizConstellation.name} 입니다.`;
+                feedbackElement.textContent = `틀렸습니다! 정답은 ${currentQuizAnswer} 입니다.`;
                 feedbackElement.classList.add('incorrect');
                 playSound('incorrect');
             }
