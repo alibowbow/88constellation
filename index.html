@@ -266,6 +266,39 @@
         @media (max-width: 560px) {
             .info-grid { grid-template-columns: 1fr; }
         }
+
+        /* ===== 분류 필터 칩 ===== */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+        .filter-chip {
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            color: var(--text-dim);
+            background: var(--surface-2);
+            border: 1px solid var(--border-glass);
+            border-radius: 999px;
+            padding: 7px 15px;
+            cursor: pointer;
+            transition: color .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
+        }
+        .filter-chip:hover {
+            color: var(--text);
+            border-color: var(--border-strong);
+        }
+        .filter-chip.active {
+            color: #11141b;
+            background: linear-gradient(180deg, var(--accent-cyan-soft), var(--accent-gold));
+            border-color: transparent;
+            font-weight: 700;
+        }
+        .filter-chip:focus-visible { outline: none; box-shadow: var(--ring); }
         .description strong {
             color: var(--accent-gold);
             margin-right: 5px;
@@ -718,8 +751,20 @@
 
         <!-- 검색 기능 추가 -->
         <div id="search-container" class="mb-4 hidden">
-            <input type="text" id="search-input" placeholder="별자리 검색..." 
+            <input type="text" id="search-input" placeholder="별자리 검색..."
                 class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+        </div>
+
+        <!-- 학습 모드 분류 필터 -->
+        <div id="learn-filter-bar" class="filter-bar hidden">
+            <button class="filter-chip active" data-filter="all">전체</button>
+            <button class="filter-chip" data-filter="봄">봄</button>
+            <button class="filter-chip" data-filter="여름">여름</button>
+            <button class="filter-chip" data-filter="가을">가을</button>
+            <button class="filter-chip" data-filter="겨울">겨울</button>
+            <button class="filter-chip" data-filter="zodiac">황도12궁</button>
+            <button class="filter-chip" data-filter="북">북반구</button>
+            <button class="filter-chip" data-filter="남">남반구</button>
         </div>
 
         <div id="mode-selection" class="mb-6">
@@ -1127,6 +1172,7 @@
         // --- 전역 변수 ---
         let currentMode = null;
         let currentLearnConstellationIndex = 0;
+        let currentLearnFilter = 'all';
         let currentQuizConstellation = null;
         let quizCorrectAnswers = 0;
         let quizTotalQuestions = 0;
@@ -1159,6 +1205,7 @@
         const progressText = document.getElementById('progress-text');
         const searchContainer = document.getElementById('search-container');
         const searchInput = document.getElementById('search-input');
+        const learnFilterBar = document.getElementById('learn-filter-bar');
 
         const constellationNameElement = document.getElementById('constellation-name');
         const constellationListGridElement = document.getElementById('constellation-list-grid');
@@ -1226,6 +1273,7 @@
             timeAttackModeButton.classList.remove('selected');
             bookmarkViewButton.classList.remove('selected');
             searchContainer.classList.add('hidden');
+            learnFilterBar.classList.add('hidden');
             progressBar.classList.add('hidden');
 
             if (mode === 'learn') {
@@ -1236,6 +1284,9 @@
                 descriptionElement.innerHTML = '별자리를 선택하여 학습 내용을 확인하세요.';
                 imageContainerElement.innerHTML = '';
                 searchContainer.classList.remove('hidden');
+                learnFilterBar.classList.remove('hidden');
+                currentLearnFilter = 'all';
+                setActiveFilterChip('all');
                 progressBar.classList.remove('hidden');
                 updateProgressBar();
             } else if (mode === 'quiz') {
@@ -1271,6 +1322,9 @@
             constellationsSortedEnglish.forEach((constellation, index) => {
                 const item = document.createElement('div');
                 item.classList.add('constellation-list-item');
+                item.dataset.seasons = (constellation.seas || []).join(',');
+                item.dataset.hemi = constellation.hemi || '';
+                item.dataset.zodiac = constellation.zod ? '1' : '0';
                 const nameParts = constellation.name.split(' (');
                 const koreanName = nameParts[0];
                 const englishName = nameParts[1] ? nameParts[1].replace(')', '') : '';
@@ -1630,7 +1684,8 @@
         function showBookmarkedConstellations() {
             currentMode = 'bookmark';
             updateUIForMode('learn'); // 학습 모드 UI 재사용
-            
+            learnFilterBar.classList.add('hidden'); // 북마크에서는 분류 필터 숨김
+
             // 모든 모드 버튼 선택 해제
             learnModeButton.classList.remove('selected');
             quizModeButton.classList.remove('selected');
@@ -1665,25 +1720,45 @@
             }
         }
         
-        // 검색 기능 추가
+        // 검색 + 분류 필터 기능
         function setupSearch() {
-            searchInput.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
+            searchInput.addEventListener('input', () => {
                 if (currentMode === 'learn' || currentMode === 'bookmark') {
-                    filterConstellationGrid(searchTerm);
+                    applyLearnFilters();
                 }
             });
         }
-        
-        function filterConstellationGrid(searchTerm) {
+
+        function setActiveFilterChip(filter) {
+            learnFilterBar.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.filter === filter);
+            });
+        }
+
+        function setupLearnFilters() {
+            learnFilterBar.addEventListener('click', (e) => {
+                const chip = e.target.closest('.filter-chip');
+                if (!chip) return;
+                playSound('click');
+                currentLearnFilter = chip.dataset.filter;
+                setActiveFilterChip(currentLearnFilter);
+                applyLearnFilters();
+            });
+        }
+
+        // 검색어(텍스트)와 분류 필터(계절/황도12궁/반구)를 함께 적용
+        function applyLearnFilters() {
+            const term = (searchInput.value || '').toLowerCase();
+            const seasons = ['봄', '여름', '가을', '겨울'];
+            const f = currentLearnFilter;
             const items = constellationListGridElement.querySelectorAll('.constellation-list-item');
             items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
+                const matchText = item.textContent.toLowerCase().includes(term);
+                let matchCat = true;
+                if (f === 'zodiac') matchCat = item.dataset.zodiac === '1';
+                else if (f === '북' || f === '남') matchCat = item.dataset.hemi === f;
+                else if (seasons.includes(f)) matchCat = (item.dataset.seasons || '').split(',').includes(f);
+                item.style.display = (matchText && matchCat) ? 'block' : 'none';
             });
         }
         
@@ -1725,6 +1800,7 @@
         window.onload = function() {
             updateUIForMode(null);
             setupSearch();
+            setupLearnFilters();
             updateProgressBar();
         };
 
