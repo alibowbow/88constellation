@@ -162,8 +162,8 @@
                 }
                 .stars-1 {
                     --tile: 460px;
-                    --speed: 240s;
-                    opacity: .55;
+                    --speed: 520s;
+                    opacity: .6;
                     background-image:
                         radial-gradient(1px 1px at 23px 41px,  oklch(95% 0.01 250 / .9) 45%, transparent 55%),
                         radial-gradient(1px 1px at 117px 233px, oklch(95% 0.01 250 / .7) 45%, transparent 55%),
@@ -172,34 +172,88 @@
                         radial-gradient(1px 1px at 351px 187px, oklch(95% 0.01 250 / .8) 45%, transparent 55%),
                         radial-gradient(1px 1px at 62px 356px,  oklch(95% 0.01 250 / .6) 45%, transparent 55%),
                         radial-gradient(1px 1px at 402px 421px, oklch(95% 0.01 250 / .7) 45%, transparent 55%),
-                        radial-gradient(1px 1px at 160px 148px, oklch(95% 0.01 250 / .5) 45%, transparent 55%);
+                        radial-gradient(1px 1px at 160px 148px, oklch(95% 0.01 250 / .5) 45%, transparent 55%),
+                        radial-gradient(1px 1px at 250px 438px, oklch(95% 0.01 250 / .65) 45%, transparent 55%),
+                        radial-gradient(1px 1px at 330px 28px,  oklch(95% 0.01 250 / .75) 45%, transparent 55%),
+                        radial-gradient(1px 1px at 36px 178px,  oklch(95% 0.01 250 / .55) 45%, transparent 55%),
+                        radial-gradient(1px 1px at 437px 262px, oklch(95% 0.01 250 / .7) 45%, transparent 55%),
+                        radial-gradient(1px 1px at 141px 412px, oklch(95% 0.01 250 / .6) 45%, transparent 55%),
+                        radial-gradient(1px 1px at 389px 349px, oklch(95% 0.01 250 / .5) 45%, transparent 55%);
                     background-size: var(--tile) var(--tile);
                 }
                 .stars-2 {
                     --tile: 340px;
-                    --speed: 150s;
-                    opacity: .6;
+                    --speed: 360s;
+                    opacity: .62;
                     background-image:
                         radial-gradient(1.4px 1.4px at 45px 67px,   oklch(96% 0.02 220 / .95) 45%, transparent 60%),
                         radial-gradient(1.3px 1.3px at 189px 21px,  oklch(94% 0.01 250 / .8) 45%, transparent 60%),
                         radial-gradient(1.3px 1.3px at 258px 200px, oklch(92% 0.04 205 / .85) 45%, transparent 60%),
                         radial-gradient(1.2px 1.2px at 90px 251px,  oklch(94% 0.01 250 / .7) 45%, transparent 60%),
                         radial-gradient(1.4px 1.4px at 310px 118px, oklch(94% 0.03 300 / .8) 45%, transparent 60%),
-                        radial-gradient(1.2px 1.2px at 152px 320px, oklch(94% 0.01 250 / .65) 45%, transparent 60%);
+                        radial-gradient(1.2px 1.2px at 152px 320px, oklch(94% 0.01 250 / .65) 45%, transparent 60%),
+                        radial-gradient(1.3px 1.3px at 228px 302px, oklch(94% 0.02 260 / .75) 45%, transparent 60%),
+                        radial-gradient(1.2px 1.2px at 18px 152px,  oklch(94% 0.01 250 / .6) 45%, transparent 60%),
+                        radial-gradient(1.4px 1.4px at 301px 262px, oklch(95% 0.03 200 / .7) 45%, transparent 60%),
+                        radial-gradient(1.2px 1.2px at 122px 12px,  oklch(94% 0.01 250 / .65) 45%, transparent 60%);
                     background-size: var(--tile) var(--tile);
-                    animation: star-drift var(--speed) linear infinite, twinkle 5.5s ease-in-out infinite alternate;
                 }
                 .stars-3 {
                     --tile: 250px;
-                    --speed: 95s;
-                    opacity: .75;
+                    --speed: 230s;
+                    opacity: .7;
                     background-image:
                         radial-gradient(2px 2px at 34px 52px,    oklch(97% 0.02 210 / 1) 35%, transparent 60%),
                         radial-gradient(1.8px 1.8px at 158px 176px, oklch(97% 0.01 250 / .9) 35%, transparent 60%),
                         radial-gradient(2.2px 2.2px at 216px 84px,  oklch(96% 0.03 90 / .9) 35%, transparent 60%),
-                        radial-gradient(1.7px 1.7px at 88px 214px,  oklch(96% 0.04 320 / .85) 35%, transparent 60%);
+                        radial-gradient(1.7px 1.7px at 88px 214px,  oklch(96% 0.04 320 / .85) 35%, transparent 60%),
+                        radial-gradient(1.8px 1.8px at 132px 118px, oklch(96% 0.02 250 / .8) 35%, transparent 60%),
+                        radial-gradient(1.7px 1.7px at 232px 226px, oklch(96% 0.03 205 / .75) 35%, transparent 60%),
+                        radial-gradient(1.9px 1.9px at 16px 158px,  oklch(96% 0.02 280 / .8) 35%, transparent 60%);
                     background-size: var(--tile) var(--tile);
-                    animation: star-drift var(--speed) linear infinite, twinkle 3.8s ease-in-out infinite alternate-reverse;
+                }
+
+                /* 은은하게 반짝이는 별 — 레이어별 주기·위상이 달라 각자 다른 리듬으로 깜빡임 */
+                .stars-t1, .stars-t2, .stars-t3 {
+                    animation:
+                        star-drift var(--speed) linear infinite,
+                        star-twinkle var(--twinkle) ease-in-out var(--phase, 0s) infinite alternate;
+                }
+                .stars-t1 {
+                    --tile: 520px;
+                    --speed: 560s;
+                    --twinkle: 4.8s;
+                    background-image:
+                        radial-gradient(4.5px 4.5px at 64px 96px,   oklch(97% 0.02 210 / .95) 16%, oklch(90% 0.05 210 / .3) 42%, transparent 70%),
+                        radial-gradient(3.5px 3.5px at 302px 214px, oklch(97% 0.01 250 / .9) 18%, oklch(92% 0.02 250 / .25) 45%, transparent 70%),
+                        radial-gradient(5px 5px at 176px 390px,     oklch(96% 0.05 90 / .95) 15%, oklch(92% 0.06 90 / .28) 42%, transparent 70%),
+                        radial-gradient(3.5px 3.5px at 434px 122px, oklch(96% 0.03 320 / .85) 18%, transparent 62%);
+                    background-size: var(--tile) var(--tile);
+                }
+                .stars-t2 {
+                    --tile: 440px;
+                    --speed: 480s;
+                    --twinkle: 6.6s;
+                    --phase: -2.4s;
+                    background-image:
+                        radial-gradient(4px 4px at 112px 62px,   oklch(97% 0.02 250 / .9) 16%, oklch(91% 0.03 250 / .28) 44%, transparent 70%),
+                        radial-gradient(4.5px 4.5px at 352px 322px, oklch(96% 0.04 205 / .9) 16%, oklch(90% 0.05 205 / .26) 44%, transparent 70%),
+                        radial-gradient(3.5px 3.5px at 242px 152px, oklch(96% 0.03 300 / .85) 18%, transparent 62%),
+                        radial-gradient(4px 4px at 42px 282px,   oklch(97% 0.02 230 / .85) 16%, oklch(91% 0.03 230 / .25) 44%, transparent 70%);
+                    background-size: var(--tile) var(--tile);
+                }
+                .stars-t3 {
+                    --tile: 620px;
+                    --speed: 640s;
+                    --twinkle: 8.4s;
+                    --phase: -5s;
+                    background-image:
+                        radial-gradient(5px 5px at 152px 182px,  oklch(97% 0.03 90 / .9) 15%, oklch(93% 0.05 90 / .26) 42%, transparent 70%),
+                        radial-gradient(3.5px 3.5px at 422px 92px,  oklch(97% 0.01 250 / .85) 18%, transparent 62%),
+                        radial-gradient(4.5px 4.5px at 522px 402px, oklch(96% 0.03 210 / .9) 16%, oklch(90% 0.04 210 / .25) 44%, transparent 70%),
+                        radial-gradient(4px 4px at 82px 472px,   oklch(96% 0.03 330 / .85) 16%, oklch(91% 0.04 330 / .22) 44%, transparent 70%),
+                        radial-gradient(3.5px 3.5px at 332px 532px, oklch(97% 0.02 250 / .8) 18%, transparent 62%);
+                    background-size: var(--tile) var(--tile);
                 }
 
                 /* 이따금 스치는 유성 */
@@ -218,7 +272,10 @@
             }
 
             @keyframes star-drift { to { transform: translateY(var(--tile)); } }
-            @keyframes twinkle { from { opacity: .35; } to { opacity: .8; } }
+            @keyframes star-twinkle {
+                from { opacity: .18; }
+                to   { opacity: .95; }
+            }
             @keyframes nebula-a { to { transform: translate(9vmax, 6vmax) scale(1.14); } }
             @keyframes nebula-b { to { transform: translate(-8vmax, 8vmax) scale(1.1); } }
             @keyframes nebula-c { to { transform: translate(-7vmax, -9vmax) scale(1.18); } }
@@ -1065,6 +1122,9 @@
         <div class="stars stars-1"></div>
         <div class="stars stars-2"></div>
         <div class="stars stars-3"></div>
+        <div class="stars stars-t1"></div>
+        <div class="stars stars-t2"></div>
+        <div class="stars stars-t3"></div>
         <div class="meteor meteor-1"></div>
         <div class="meteor meteor-2"></div>
     </div>
