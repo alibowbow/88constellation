@@ -162,7 +162,7 @@
                 }
                 .stars-1 {
                     --tile: 460px;
-                    --speed: 520s;
+                    --speed: 300s;
                     opacity: .6;
                     background-image:
                         radial-gradient(1px 1px at 23px 41px,  oklch(95% 0.01 250 / .9) 45%, transparent 55%),
@@ -183,7 +183,7 @@
                 }
                 .stars-2 {
                     --tile: 340px;
-                    --speed: 360s;
+                    --speed: 210s;
                     opacity: .62;
                     background-image:
                         radial-gradient(1.4px 1.4px at 45px 67px,   oklch(96% 0.02 220 / .95) 45%, transparent 60%),
@@ -200,7 +200,7 @@
                 }
                 .stars-3 {
                     --tile: 250px;
-                    --speed: 230s;
+                    --speed: 130s;
                     opacity: .7;
                     background-image:
                         radial-gradient(2px 2px at 34px 52px,    oklch(97% 0.02 210 / 1) 35%, transparent 60%),
@@ -213,7 +213,8 @@
                     background-size: var(--tile) var(--tile);
                 }
 
-                /* 은은하게 반짝이는 별 — 레이어별 주기·위상이 달라 각자 다른 리듬으로 깜빡임 */
+                /* 은은하게 반짝이는 별 — ✦ 회절 스파이크 (세로+가로 빛줄기 + 코어를 겹친 타원 그라데이션)
+                   레이어별 주기·위상이 달라 각자 다른 리듬으로 깜빡임 */
                 .stars-t1, .stars-t2, .stars-t3 {
                     animation:
                         star-drift var(--speed) linear infinite,
@@ -221,38 +222,77 @@
                 }
                 .stars-t1 {
                     --tile: 520px;
-                    --speed: 560s;
+                    --speed: 320s;
                     --twinkle: 4.8s;
                     background-image:
-                        radial-gradient(4.5px 4.5px at 64px 96px,   oklch(97% 0.02 210 / .95) 16%, oklch(90% 0.05 210 / .3) 42%, transparent 70%),
-                        radial-gradient(3.5px 3.5px at 302px 214px, oklch(97% 0.01 250 / .9) 18%, oklch(92% 0.02 250 / .25) 45%, transparent 70%),
-                        radial-gradient(5px 5px at 176px 390px,     oklch(96% 0.05 90 / .95) 15%, oklch(92% 0.06 90 / .28) 42%, transparent 70%),
-                        radial-gradient(3.5px 3.5px at 434px 122px, oklch(96% 0.03 320 / .85) 18%, transparent 62%);
+                        /* ✦ 시안 (64,96) 스파이크 13px */
+                        radial-gradient(1.1px 13px at 64px 96px,  oklch(95% 0.03 210 / .85), transparent 72%),
+                        radial-gradient(13px 1.1px at 64px 96px,  oklch(95% 0.03 210 / .85), transparent 72%),
+                        radial-gradient(2.4px 2.4px at 64px 96px, oklch(99% 0.01 210) 30%, oklch(92% 0.04 210 / .4) 58%, transparent 80%),
+                        /* ✦ 화이트 (302,214) 스파이크 9px */
+                        radial-gradient(1px 9px at 302px 214px,   oklch(96% 0.01 250 / .8), transparent 72%),
+                        radial-gradient(9px 1px at 302px 214px,   oklch(96% 0.01 250 / .8), transparent 72%),
+                        radial-gradient(2px 2px at 302px 214px,   oklch(99% 0 0) 30%, oklch(93% 0.01 250 / .35) 58%, transparent 80%),
+                        /* ✦ 골드 (176,390) 스파이크 15px — 가장 큰 별 */
+                        radial-gradient(1.2px 15px at 176px 390px, oklch(95% 0.06 90 / .9), transparent 72%),
+                        radial-gradient(15px 1.2px at 176px 390px, oklch(95% 0.06 90 / .9), transparent 72%),
+                        radial-gradient(2.6px 2.6px at 176px 390px, oklch(99% 0.02 90) 30%, oklch(93% 0.06 90 / .42) 58%, transparent 80%),
+                        /* ✦ 핑크 (434,122) 스파이크 8px */
+                        radial-gradient(1px 8px at 434px 122px,   oklch(95% 0.04 320 / .75), transparent 72%),
+                        radial-gradient(8px 1px at 434px 122px,   oklch(95% 0.04 320 / .75), transparent 72%),
+                        radial-gradient(1.8px 1.8px at 434px 122px, oklch(98% 0.02 320) 30%, transparent 78%);
                     background-size: var(--tile) var(--tile);
                 }
                 .stars-t2 {
                     --tile: 440px;
-                    --speed: 480s;
+                    --speed: 280s;
                     --twinkle: 6.6s;
                     --phase: -2.4s;
                     background-image:
-                        radial-gradient(4px 4px at 112px 62px,   oklch(97% 0.02 250 / .9) 16%, oklch(91% 0.03 250 / .28) 44%, transparent 70%),
-                        radial-gradient(4.5px 4.5px at 352px 322px, oklch(96% 0.04 205 / .9) 16%, oklch(90% 0.05 205 / .26) 44%, transparent 70%),
-                        radial-gradient(3.5px 3.5px at 242px 152px, oklch(96% 0.03 300 / .85) 18%, transparent 62%),
-                        radial-gradient(4px 4px at 42px 282px,   oklch(97% 0.02 230 / .85) 16%, oklch(91% 0.03 230 / .25) 44%, transparent 70%);
+                        /* ✦ 블루화이트 (112,62) 스파이크 10px */
+                        radial-gradient(1px 10px at 112px 62px,   oklch(96% 0.02 250 / .8), transparent 72%),
+                        radial-gradient(10px 1px at 112px 62px,   oklch(96% 0.02 250 / .8), transparent 72%),
+                        radial-gradient(2.2px 2.2px at 112px 62px, oklch(99% 0.01 250) 30%, oklch(93% 0.02 250 / .38) 58%, transparent 80%),
+                        /* ✦ 시안 (352,322) 스파이크 14px — 가장 큰 별 */
+                        radial-gradient(1.2px 14px at 352px 322px, oklch(95% 0.05 205 / .88), transparent 72%),
+                        radial-gradient(14px 1.2px at 352px 322px, oklch(95% 0.05 205 / .88), transparent 72%),
+                        radial-gradient(2.5px 2.5px at 352px 322px, oklch(99% 0.02 205) 30%, oklch(92% 0.05 205 / .4) 58%, transparent 80%),
+                        /* ✦ 바이올렛 (242,152) 스파이크 8px */
+                        radial-gradient(1px 8px at 242px 152px,   oklch(95% 0.04 300 / .72), transparent 72%),
+                        radial-gradient(8px 1px at 242px 152px,   oklch(95% 0.04 300 / .72), transparent 72%),
+                        radial-gradient(1.8px 1.8px at 242px 152px, oklch(98% 0.02 300) 30%, transparent 78%),
+                        /* ✦ 아이스블루 (42,282) 스파이크 11px */
+                        radial-gradient(1.1px 11px at 42px 282px, oklch(96% 0.03 230 / .8), transparent 72%),
+                        radial-gradient(11px 1.1px at 42px 282px, oklch(96% 0.03 230 / .8), transparent 72%),
+                        radial-gradient(2.2px 2.2px at 42px 282px, oklch(99% 0.01 230) 30%, oklch(93% 0.03 230 / .35) 58%, transparent 80%);
                     background-size: var(--tile) var(--tile);
                 }
                 .stars-t3 {
                     --tile: 620px;
-                    --speed: 640s;
+                    --speed: 380s;
                     --twinkle: 8.4s;
                     --phase: -5s;
                     background-image:
-                        radial-gradient(5px 5px at 152px 182px,  oklch(97% 0.03 90 / .9) 15%, oklch(93% 0.05 90 / .26) 42%, transparent 70%),
-                        radial-gradient(3.5px 3.5px at 422px 92px,  oklch(97% 0.01 250 / .85) 18%, transparent 62%),
-                        radial-gradient(4.5px 4.5px at 522px 402px, oklch(96% 0.03 210 / .9) 16%, oklch(90% 0.04 210 / .25) 44%, transparent 70%),
-                        radial-gradient(4px 4px at 82px 472px,   oklch(96% 0.03 330 / .85) 16%, oklch(91% 0.04 330 / .22) 44%, transparent 70%),
-                        radial-gradient(3.5px 3.5px at 332px 532px, oklch(97% 0.02 250 / .8) 18%, transparent 62%);
+                        /* ✦ 골드 (152,182) 스파이크 16px — 최대 별 */
+                        radial-gradient(1.3px 16px at 152px 182px, oklch(95% 0.06 90 / .9), transparent 72%),
+                        radial-gradient(16px 1.3px at 152px 182px, oklch(95% 0.06 90 / .9), transparent 72%),
+                        radial-gradient(2.8px 2.8px at 152px 182px, oklch(99% 0.02 90) 30%, oklch(93% 0.06 90 / .42) 58%, transparent 80%),
+                        /* ✦ 화이트 (422,92) 스파이크 9px */
+                        radial-gradient(1px 9px at 422px 92px,    oklch(96% 0.01 250 / .78), transparent 72%),
+                        radial-gradient(9px 1px at 422px 92px,    oklch(96% 0.01 250 / .78), transparent 72%),
+                        radial-gradient(2px 2px at 422px 92px,    oklch(99% 0 0) 30%, transparent 78%),
+                        /* ✦ 시안 (522,402) 스파이크 12px */
+                        radial-gradient(1.1px 12px at 522px 402px, oklch(95% 0.04 210 / .82), transparent 72%),
+                        radial-gradient(12px 1.1px at 522px 402px, oklch(95% 0.04 210 / .82), transparent 72%),
+                        radial-gradient(2.3px 2.3px at 522px 402px, oklch(99% 0.01 210) 30%, oklch(92% 0.04 210 / .36) 58%, transparent 80%),
+                        /* ✦ 핑크 (82,472) 스파이크 11px */
+                        radial-gradient(1.1px 11px at 82px 472px, oklch(95% 0.04 330 / .78), transparent 72%),
+                        radial-gradient(11px 1.1px at 82px 472px, oklch(95% 0.04 330 / .78), transparent 72%),
+                        radial-gradient(2.1px 2.1px at 82px 472px, oklch(98% 0.02 330) 30%, oklch(92% 0.04 330 / .32) 58%, transparent 80%),
+                        /* ✦ 화이트 (332,532) 스파이크 8px */
+                        radial-gradient(1px 8px at 332px 532px,   oklch(96% 0.01 250 / .72), transparent 72%),
+                        radial-gradient(8px 1px at 332px 532px,   oklch(96% 0.01 250 / .72), transparent 72%),
+                        radial-gradient(1.8px 1.8px at 332px 532px, oklch(99% 0 0) 30%, transparent 78%);
                     background-size: var(--tile) var(--tile);
                 }
 
