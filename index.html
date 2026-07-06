@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>88별자리(IAU) 챌린지</title>
     <meta name="theme-color" content="#0a0b14">
     <meta name="color-scheme" content="dark">
@@ -85,7 +85,9 @@
         /* ===== 리셋/베이스 ===== */
         @layer reset {
             *, *::before, *::after { box-sizing: border-box; }
-            html { -webkit-text-size-adjust: 100%; }
+            /* overflow-x는 html에 clip으로 — body에 두면 스크롤러가 body로 바뀌어
+               window.scrollY가 깨진다(문서 단일 스크롤러 유지) */
+            html { -webkit-text-size-adjust: 100%; overflow-x: clip; overscroll-behavior-y: none; }
             body { margin: 0; }
             button, input, fieldset { font: inherit; color: inherit; }
             fieldset { min-width: 0; }
@@ -353,7 +355,9 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                padding: clamp(18px, 4vh, 44px) clamp(14px, 3vw, 28px) 56px;
+                /* 하단 = 고정 탭바 높이 + iOS 홈 인디케이터 여유 (콘텐츠 가림 방지) */
+                padding: clamp(16px, 3.5vh, 40px) clamp(14px, 3vw, 28px)
+                         calc(var(--tabbar-h, 74px) + env(safe-area-inset-bottom, 0px) + 22px);
                 font-family: var(--font-sans);
                 font-size: 16px;
                 line-height: 1.6;
@@ -559,17 +563,27 @@
                 }
             }
 
-            /* ===== 모드 선택 ===== */
-            #mode-selection {
+            /* ===== 모드 탭바 (하단 고정 · 엄지존) — JS가 <body> 직계로 이동해 뷰포트 고정 ===== */
+            .mode-tabbar {
+                position: fixed;
+                left: 0; right: 0; bottom: 0;
+                z-index: 60;
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-                margin-bottom: 24px;
+                gap: 6px;
+                padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+                background: oklch(12% 0.02 265 / .82);
+                -webkit-backdrop-filter: blur(18px) saturate(1.3);
+                backdrop-filter: blur(18px) saturate(1.3);
+                border-top: 1px solid var(--line);
+                transition: transform .28s var(--ease-out);
             }
+            .mode-tabbar.tabbar-hidden { transform: translateY(130%); } /* 가상키보드 시 숨김 */
             .mode-button {
                 position: relative;
-                padding: 15px 10px;
-                font-size: .95rem;
+                min-height: 50px;
+                padding: 11px 6px;
+                font-size: clamp(.78rem, 3.2vw, .95rem);
                 font-weight: 700;
                 letter-spacing: -0.01em;
                 color: var(--ink-2);
@@ -630,21 +644,29 @@
                 color: transparent;
             }
 
+            /* ===== 학습 마스터-디테일: 목록 ↔ 상세 화면 슬라이드 전환 =====
+               핵심: 비활성 화면은 position:absolute로 흐름에서 빼야(translateX만으론
+               세로 높이가 남아 상세가 빈 공간 아래에 생김). 활성 화면이 높이를 결정. */
+            .learn-stack { position: relative; overflow-x: clip; }
+            .learn-list-screen, .learn-detail-screen { transition: transform .32s var(--ease-out); }
+            .game-container[data-learn='list'] .learn-detail-screen {
+                position: absolute; inset: 0; transform: translateX(100%); pointer-events: none;
+            }
+            .game-container[data-learn='detail'] .learn-list-screen {
+                position: absolute; inset: 0; transform: translateX(-100%); pointer-events: none;
+            }
+            /* data-learn 미설정(퀴즈/타임어택/초기): 두 화면 모두 정상 흐름 →
+               #description(퀴즈 문제) 정상 노출. 슬라이드 규칙은 반드시 [data-learn] 스코프에만. */
+            .nav-back { color: var(--a1); }
+
             /* ===== 별자리 목록 그리드 ===== */
             .constellation-list-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(122px, 1fr));
                 gap: 9px;
-                /* 화면비율에 맞춰 높이 배분 — 좁고 긴 화면에서도 아래 패널이 닿는 거리 유지 */
-                max-height: min(420px, 52svh);
-                overflow-y: auto;
-                overscroll-behavior: contain;
-                padding: 4px 6px 28px 4px;
-                margin-bottom: 20px;
-                scroll-behavior: smooth;
-                /* 하단 페이드 — 마지막 줄이 뚝 잘려 보이는 대신 '더 있음'을 암시 */
-                -webkit-mask-image: linear-gradient(#000 calc(100% - 26px), transparent);
-                mask-image: linear-gradient(#000 calc(100% - 26px), transparent);
+                /* 중첩 스크롤 제거 — 문서(window) 단일 스크롤 표면으로 통일 */
+                padding: 2px 2px 4px;
+                margin-bottom: 4px;
             }
             .constellation-list-item {
                 position: relative;
@@ -697,9 +719,6 @@
                 margin-bottom: 22px;
                 padding: clamp(18px, 3cqw, 26px);
                 min-height: 64px;
-                max-height: min(620px, 62svh);
-                overflow-y: auto;
-                overscroll-behavior: contain;
                 font-size: .95rem;
                 line-height: 1.75;
                 color: var(--ink-2);
@@ -1015,13 +1034,8 @@
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
                 gap: 8px;
-                max-height: min(380px, 52svh);
-                overflow-y: auto;
-                overscroll-behavior: contain;
-                padding: 4px 4px 26px;
+                padding: 4px;
                 margin-bottom: 12px;
-                -webkit-mask-image: linear-gradient(#000 calc(100% - 24px), transparent);
-                mask-image: linear-gradient(#000 calc(100% - 24px), transparent);
             }
             .time-attack-button {
                 padding: 11px 6px;
@@ -1086,7 +1100,6 @@
 
             /* ===== 컨테이너 쿼리 — 셸 폭 기준 반응형 ===== */
             @container shell (max-width: 620px) {
-                #mode-selection { grid-template-columns: repeat(2, 1fr); }
                 .info-grid { grid-template-columns: 1fr; }
                 .options-grid { grid-template-columns: 1fr; }
                 .constellation-list-grid { grid-template-columns: repeat(auto-fill, minmax(102px, 1fr)); }
@@ -1098,11 +1111,12 @@
             }
 
             /* 좁은 셸: 마스트헤드 여백·자간 축소로 세로 비율 회복 */
+            /* 모바일: 마스트헤드를 슬림하게 — 세로 공간 회복 */
             @container shell (max-width: 760px) {
-                .masthead { margin-bottom: 20px; }
-                .masthead-overline { font-size: .64rem; letter-spacing: .3em; text-indent: .3em; }
-                .masthead-sub { font-size: .86rem; }
-                .masthead-divider { margin-top: 14px; }
+                .masthead { margin-bottom: 16px; }
+                .masthead-overline, .masthead-divider { display: none; }
+                .masthead-title { font-size: clamp(1.5rem, 7vw, 2rem); }
+                .masthead-sub { font-size: .8rem; margin-top: 6px; }
             }
 
             /* ===== 터치/태블릿 성능 프로파일 =====
@@ -1125,6 +1139,13 @@
                     -webkit-backdrop-filter: none;
                     backdrop-filter: none;
                 }
+                /* 스크롤 잭 방지: 고정 탭바도 blur 끄고 불투명 배경으로 (기존 b0aaebf 방침 유지) */
+                .mode-tabbar {
+                    -webkit-backdrop-filter: none;
+                    backdrop-filter: none;
+                    background: oklch(11% 0.02 265 / .96);
+                }
+                .mode-button.selected::after { animation: none; opacity: .3; }
             }
         }
 
@@ -1239,41 +1260,48 @@
             </div>
         </div>
 
-        <!-- 검색 -->
-        <div id="search-container" class="search hidden">
-            <input type="text" id="search-input" class="search-field" placeholder="별자리 검색 (한글/영문)">
-        </div>
-
-        <!-- 학습 모드 분류 필터 -->
-        <div id="learn-filter-bar" class="filter-bar hidden">
-            <button class="filter-chip active" data-filter="all">전체</button>
-            <button class="filter-chip" data-filter="봄">봄</button>
-            <button class="filter-chip" data-filter="여름">여름</button>
-            <button class="filter-chip" data-filter="가을">가을</button>
-            <button class="filter-chip" data-filter="겨울">겨울</button>
-            <button class="filter-chip" data-filter="zodiac">황도12궁</button>
-            <button class="filter-chip" data-filter="북">북반구</button>
-            <button class="filter-chip" data-filter="남">남반구</button>
-        </div>
-
-        <div id="mode-selection" class="mb-6">
-            <button id="learn-mode-button" class="mode-button">학습 모드</button>
-            <button id="quiz-mode-button" class="mode-button">퀴즈 모드</button>
-            <button id="time-attack-mode-button" class="mode-button">타임어택 모드</button>
-            <!-- 북마크 보기 버튼 추가 -->
+        <!-- 모드 탭바 (JS가 <body> 직계로 이동해 하단 고정 = 엄지존) -->
+        <nav id="mode-selection" class="mode-tabbar" aria-label="모드 선택">
+            <button id="learn-mode-button" class="mode-button">학습</button>
+            <button id="quiz-mode-button" class="mode-button">퀴즈</button>
+            <button id="time-attack-mode-button" class="mode-button">타임어택</button>
             <button id="bookmark-view-button" class="mode-button">북마크</button>
-        </div>
+        </nav>
 
-        <div id="constellation-name" class="constellation-name hidden"></div>
-        <div id="constellation-list-grid" class="constellation-list-grid hidden"></div>
-        <div id="description" class="description">
-            원하는 모드를 선택하세요!
-        </div>
-        <div id="image-container" class="image-container hidden"></div>
-        <div id="nav-buttons" class="nav-buttons hidden">
-            <button id="prev-button" class="nav-button">이전</button>
-            <button id="bookmark-button" class="nav-button">북마크</button>
-            <button id="next-button" class="nav-button">다음</button>
+        <!-- 학습: 목록 화면 ↔ 상세 화면 (마스터-디테일 전환) -->
+        <div class="learn-stack">
+            <section class="learn-list-screen">
+                <!-- 검색 -->
+                <div id="search-container" class="search hidden">
+                    <input type="text" id="search-input" class="search-field" placeholder="별자리 검색 (한글/영문)">
+                </div>
+                <!-- 분류 필터 -->
+                <div id="learn-filter-bar" class="filter-bar hidden">
+                    <button class="filter-chip active" data-filter="all">전체</button>
+                    <button class="filter-chip" data-filter="봄">봄</button>
+                    <button class="filter-chip" data-filter="여름">여름</button>
+                    <button class="filter-chip" data-filter="가을">가을</button>
+                    <button class="filter-chip" data-filter="겨울">겨울</button>
+                    <button class="filter-chip" data-filter="zodiac">황도12궁</button>
+                    <button class="filter-chip" data-filter="북">북반구</button>
+                    <button class="filter-chip" data-filter="남">남반구</button>
+                </div>
+                <div id="constellation-list-grid" class="constellation-list-grid hidden"></div>
+            </section>
+
+            <section class="learn-detail-screen">
+                <div id="constellation-name" class="constellation-name hidden"></div>
+                <div id="description" class="description">
+                    원하는 모드를 선택하세요!
+                </div>
+                <div id="image-container" class="image-container hidden"></div>
+                <div id="nav-buttons" class="nav-buttons hidden">
+                    <button id="back-to-list-button" class="nav-button nav-back">← 목록</button>
+                    <button id="prev-button" class="nav-button">이전</button>
+                    <button id="bookmark-button" class="nav-button">북마크</button>
+                    <button id="next-button" class="nav-button">다음</button>
+                </div>
+            </section>
         </div>
 
         <div id="options" class="options-grid hidden"></div>
@@ -1673,6 +1701,9 @@
         let skyLimitMag = 5.2;
         try { const _sm = parseFloat(localStorage.getItem('skyLimitMag')); if (_sm >= 3.5 && _sm <= 5.5) skyLimitMag = _sm; } catch (e) {}
         let currentSky = null;
+        // 학습 마스터-디테일 상태
+        const gameContainer = document.querySelector('.game-container');
+        let lastListScroll = 0;
         let currentQuizConstellation = null;
         let currentQuizType = 'desc';
         let currentQuizAnswer = null;
@@ -1716,6 +1747,7 @@
 
         const optionsElement = document.getElementById('options');
         const navButtonsElement = document.getElementById('nav-buttons');
+        const backToListButton = document.getElementById('back-to-list-button');
         const prevButton = document.getElementById('prev-button');
         const nextButton = document.getElementById('next-button');
         const bookmarkButton = document.getElementById('bookmark-button');
@@ -1754,6 +1786,8 @@
         // --- UI 업데이트 함수 ---
         function updateUIForMode(mode) {
             currentMode = mode;
+            // 화면 상태 초기화 — quiz/timeAttack 진입 시 상세 잔존 방지(슬라이드 CSS 미적용 → #description 정상)
+            gameContainer.removeAttribute('data-learn');
             // 모든 게임 관련 요소 숨기기
             constellationNameElement.classList.add('hidden');
             constellationListGridElement.classList.add('hidden');
@@ -1793,6 +1827,7 @@
                 setActiveFilterChip('all');
                 progressBar.classList.remove('hidden');
                 updateProgressBar();
+                gameContainer.setAttribute('data-learn', 'list'); // 목록 화면
             } else if (mode === 'quiz') {
                 optionsElement.classList.remove('hidden');
                 feedbackElement.classList.remove('hidden');
@@ -1844,6 +1879,16 @@
         function showLearningDetails(index) {
             if (currentMode !== 'learn' || index < 0 || index >= constellationsSortedEnglish.length) return;
             currentLearnConstellationIndex = index;
+            // 목록 → 상세 '화면 전환'. 최초 진입에서만 스크롤 저장 + 히스토리 push
+            // (이전/다음은 이미 detail 상태 → 백스택 오염 방지). data-learn을 렌더 '이전'에
+            // 세팅해야 #image-container가 레이아웃 폭을 확정 → 성도 캔버스 정상 렌더.
+            const enteringDetail = gameContainer.getAttribute('data-learn') !== 'detail';
+            if (enteringDetail) {
+                lastListScroll = window.scrollY || 0;
+                try { history.pushState({ learnDetail: true }, ''); } catch (e) {}
+            }
+            gameContainer.setAttribute('data-learn', 'detail');
+            window.scrollTo(0, 0);
             const constellation = constellationsSortedEnglish[index];
             constellationNameElement.textContent = constellation.name;
 
@@ -1873,6 +1918,10 @@
 
             // 네비게이션 버튼 표시 및 북마크 버튼 업데이트
             navButtonsElement.classList.remove('hidden');
+            // 북마크 상세에선 이전/다음 숨김(전체 목록 대신 북마크 부분집합이므로 무의미)
+            const inBookmark = bookmarkViewButton.classList.contains('selected');
+            prevButton.style.display = inBookmark ? 'none' : '';
+            nextButton.style.display = inBookmark ? 'none' : '';
             updateBookmarkButton();
             markConstellationAsLearned(index);
         }
@@ -1923,6 +1972,14 @@
             opts = opts || {};
             const lines = (typeof SKY_LINES !== 'undefined') ? SKY_LINES[abbr] : null;
             if (!lines || !lines.length) return false;
+            // 폭 미확정(레이아웃 전) 방어 — 확정될 때까지 rAF 재시도(무한루프 방지 상한)
+            const wprobe = canvas.clientWidth || (canvas.parentElement ? canvas.parentElement.clientWidth : 0);
+            if (!wprobe) {
+                canvas._skyRetry = (canvas._skyRetry || 0) + 1;
+                if (canvas._skyRetry <= 8) requestAnimationFrame(() => drawSkyChart(canvas, abbr, opts));
+                return false;
+            }
+            canvas._skyRetry = 0;
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             const cssW = canvas.clientWidth || (canvas.parentElement ? canvas.parentElement.clientWidth : 320) || 320;
             const cssH = canvas.clientHeight || 280;
@@ -2101,8 +2158,25 @@
             imageContainerElement.appendChild(block);
 
             const starName = parseStarName(constellation.star);
-            currentSky = { canvas, abbr, starName };
+            currentSky = { canvas, abbr, starName, observer: null };
             requestAnimationFrame(() => drawSkyChart(canvas, abbr, { limitMag: skyLimitMag, starName, animate: true }));
+
+            // 폭 확정/변화(화면 전환·회전·키보드) 시 재렌더 — clientWidth=0 문제의 가장 견고한 해법.
+            // 첫 콜백(초기 관측)은 무시해 진입 애니메이션을 방해하지 않음.
+            if (window.ResizeObserver) {
+                let roDeb, lastW = 0, firstRO = true;
+                const ro = new ResizeObserver((entries) => {
+                    const w = Math.round(entries[0].contentRect.width);
+                    if (firstRO) { firstRO = false; lastW = w; return; }
+                    if (w > 0 && w !== lastW) {
+                        lastW = w;
+                        clearTimeout(roDeb);
+                        roDeb = setTimeout(() => drawSkyChart(canvas, abbr, { limitMag: skyLimitMag, starName, animate: false }), 45);
+                    }
+                });
+                ro.observe(wrap);
+                currentSky.observer = ro;
+            }
 
             let deb;
             slider.addEventListener('input', () => {
@@ -2552,6 +2626,18 @@
         }
 
 
+        // 상세 → 목록 복귀 (뒤로가기 버튼 / 안드로이드 하드웨어 백 / iOS 스와이프 백)
+        // withViewTransition으로 감싸지 않음 — CSS transform 슬라이드와 이중 애니메이션 방지
+        function closeDetail() {
+            if (gameContainer.getAttribute('data-learn') !== 'detail') return;
+            gameContainer.setAttribute('data-learn', 'list');
+            navButtonsElement.classList.add('hidden');
+            if (currentSky && currentSky.canvas && currentSky.canvas._skyRaf) cancelAnimationFrame(currentSky.canvas._skyRaf);
+            if (currentSky && currentSky.observer) currentSky.observer.disconnect();
+            currentSky = null;
+            window.scrollTo(0, lastListScroll || 0); // 목록 스크롤 위치 복원
+        }
+
         // --- 이벤트 리스너 연결 ---
         // View Transitions API: 지원 브라우저에서 모드 전환을 부드러운 크로스페이드로
         function withViewTransition(fn) {
@@ -2570,12 +2656,29 @@
         nextQuizButton.addEventListener('click', nextQuizRound);
         
         // 네비게이션 버튼 이벤트
+        backToListButton.addEventListener('click', () => history.back()); // popstate → closeDetail
         prevButton.addEventListener('click', () => navigateLearning('prev'));
         nextButton.addEventListener('click', () => navigateLearning('next'));
         bookmarkButton.addEventListener('click', toggleBookmark);
+        // 하드웨어/제스처 백 → 상세면 목록으로 복귀
+        window.addEventListener('popstate', () => {
+            if (gameContainer.getAttribute('data-learn') === 'detail') closeDetail();
+        });
 
         // 페이지 로드 시 초기 상태 설정
         window.onload = function() {
+            // 탭바를 <body> 직계로 이동 — .game-container는 container:shell(레이아웃 컨테인)이라
+            // 그 자식의 position:fixed가 뷰포트가 아닌 카드에 고정되는 유명한 함정을 회피
+            document.body.appendChild(modeSelectionElement);
+            const setTabbarH = () => document.documentElement.style.setProperty('--tabbar-h', modeSelectionElement.offsetHeight + 'px');
+            setTabbarH();
+            window.addEventListener('resize', setTabbarH);
+            try { history.scrollRestoration = 'manual'; } catch (e) {} // 스크롤 복원은 우리가 직접
+
+            // 검색 포커스 시 가상키보드와 겹치지 않게 탭바 내림
+            searchInput.addEventListener('focus', () => modeSelectionElement.classList.add('tabbar-hidden'));
+            searchInput.addEventListener('blur', () => modeSelectionElement.classList.remove('tabbar-hidden'));
+
             updateUIForMode(null);
             setupSearch();
             setupLearnFilters();
