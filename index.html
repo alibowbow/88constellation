@@ -417,22 +417,20 @@
             }
             .masthead-title {
                 font-size: var(--t-display);
-                font-weight: 840;
-                letter-spacing: -0.035em;
-                line-height: 1.08;
+                font-weight: 800;
+                letter-spacing: -0.02em;
+                line-height: 1.14;
                 text-wrap: balance;
-                background: linear-gradient(115deg, oklch(96% 0.01 250) 30%, var(--a1) 72%, var(--a2) 105%);
+                /* 선명한 풀 오로라 스윕 — 시안→바이올렛→마젠타가 타이틀 전체를 가로지름 */
+                background: linear-gradient(115deg, oklch(96% 0.02 220), var(--a1) 34%, var(--a2) 62%, var(--a3) 88%);
                 -webkit-background-clip: text;
                 background-clip: text;
                 color: transparent;
-                filter: drop-shadow(0 2px 3px oklch(8% 0.02 270 / .8)) drop-shadow(0 4px 18px oklch(70% 0.14 280 / .28));
+                /* 어두운 그림자는 그라데이션을 탁하게 만들어 배제 — 은은한 오로라 광륜만 */
+                filter: drop-shadow(0 3px 20px oklch(72% 0.15 290 / .35));
 
-                .num {
-                    font-family: var(--font-display);
-                    font-weight: 700;
-                    font-size: 1.06em;
-                    letter-spacing: -.01em;
-                }
+                /* '88'도 같은 폰트·같은 굵기로 — 혼용 위화감 제거 */
+                .num { font: inherit; letter-spacing: inherit; }
             }
             .masthead-sub {
                 margin-top: 12px;
