@@ -403,62 +403,51 @@
                 text-shadow: 0 1px 3px oklch(8% 0.02 270 / .9), 0 2px 16px oklch(8% 0.02 270 / .6);
             }
 
-            /* ===== 마스트헤드 ===== */
-            .masthead { margin-bottom: clamp(30px, 6svh, 52px); }
-            .masthead-overline {
-                font-family: var(--font-display);
-                font-size: var(--t-micro);
-                font-weight: 500;
-                letter-spacing: .32em;
-                text-indent: .32em; /* 자간 보정 → 시각 중앙 */
-                text-transform: uppercase;
-                color: oklch(68% 0.05 225);
-                margin-bottom: 14px;
+            /* ===== 마스트헤드 — '88' 별자리 엠블럼 + 순백 워드마크 =====
+               장식 텍스트가 아니라 앱의 정체성: 실측 성도처럼 별을 이음선으로 이어 그린 88 */
+            .masthead { margin-bottom: clamp(26px, 5.5svh, 46px); }
+            .masthead-emblem {
+                width: clamp(150px, 40cqw, 210px);
+                margin: 0 auto 12px;
+
+                svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+                /* 이음선 — 성도와 같은 시안 라인, 로드 시 별에서 별로 그려짐 */
+                .lines { filter: drop-shadow(0 0 5px oklch(80% 0.09 215 / .45)); }
+                .seg {
+                    stroke: oklch(84% 0.07 215 / .55);
+                    stroke-width: 1;
+                    stroke-linecap: round;
+                    stroke-dasharray: 1;
+                    stroke-dashoffset: 1;
+                    animation: emblem-draw .8s var(--ease-out) forwards;
+                    animation-delay: calc(var(--i, 0) * 55ms);
+                }
+                /* 별 — 흰 별 + 금색 1등성(✦ 스파이크) */
+                .starsg { filter: drop-shadow(0 0 3px oklch(92% 0.04 100 / .5)); }
+                .st-w { fill: oklch(93% 0.012 250); }
+                .st-g { fill: var(--gold); }
+                .spk { stroke: var(--gold); stroke-width: .9; opacity: .85; }
+                .tw { animation: emblem-twinkle var(--tw, 3.8s) ease-in-out infinite alternate; }
+            }
+            @keyframes emblem-draw { to { stroke-dashoffset: 0; } }
+            @keyframes emblem-twinkle { from { opacity: .5; } to { opacity: 1; } }
+            /* 모션 최소화 환경: draw-in 애니메이션이 죽어도 선이 보이게 */
+            @media (prefers-reduced-motion: reduce) {
+                .masthead-emblem .seg { stroke-dashoffset: 0 !important; }
             }
             .masthead-title {
-                font-size: var(--t-display);
-                font-weight: 800;
-                letter-spacing: -0.02em;
-                line-height: 1.14;
-                text-wrap: balance;
-                /* 별빛 골드 — 차가운 오로라(창백함) 대신 따뜻한 화이트→샴페인→골드.
-                   밤하늘 위에서 살아있는 색이며 앱의 금색 ✦ 시그니처와 일체 */
-                background: linear-gradient(115deg,
-                    oklch(97% 0.005 100) 0%,
-                    oklch(93% 0.04 95) 38%,
-                    var(--gold) 72%,
-                    oklch(76% 0.115 75) 100%);
-                -webkit-background-clip: text;
-                background-clip: text;
-                color: transparent;
-                filter: drop-shadow(0 2px 16px oklch(82% 0.1 85 / .28));
-
-                /* '88'도 같은 폰트·같은 굵기로 — 혼용 위화감 제거 */
-                .num { font: inherit; letter-spacing: inherit; }
+                font-size: clamp(1.35rem, 1.05rem + 3cqw, 1.8rem);
+                font-weight: 650;
+                letter-spacing: -0.01em;
+                line-height: 1.2;
+                color: var(--ink-1); /* 그라데이션 없음 — 순백 워드마크 */
             }
             .masthead-sub {
-                margin-top: 12px;
+                margin-top: 8px;
                 font-size: var(--t-caption);
-                color: var(--ink-2);
+                color: var(--ink-3);
                 text-wrap: balance;
-            }
-            /* ✦ 소멸 헤어라인 — 이 앱의 서명. 선의 끝이 밤하늘로 풀려 사라진다 */
-            .masthead-divider {
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                margin: 24px auto 0;
-                width: min(420px, 78%);
-                color: var(--gold);
-                font-size: .6rem;
-
-                &::before, &::after {
-                    content: "";
-                    flex: 1;
-                    height: 1px;
-                }
-                &::before { background: linear-gradient(90deg, transparent 25%, oklch(84% 0.126 205 / .28)); }
-                &::after  { background: var(--hairline); }
             }
         }
 
@@ -1175,10 +1164,9 @@
 
             /* 좁은 화면: 마스트헤드 응축 */
             @container shell (max-width: 760px) {
-                .masthead { margin-bottom: 24px; }
-                .masthead-overline { margin-bottom: 10px; }
-                .masthead-sub { font-size: .8rem; margin-top: 8px; }
-                .masthead-divider { margin-top: 18px; }
+                .masthead { margin-bottom: 22px; }
+                .masthead-emblem { width: clamp(128px, 36cqw, 168px); }
+                .masthead-sub { font-size: .8rem; margin-top: 6px; }
             }
 
             /* 데스크톱(정밀 포인터)에서만 유리 블러 — coarse는 불투명 근사 (스크롤 잭 방지) */
@@ -1274,6 +1262,14 @@
            ========================================================= */
         @layer compat {
             .hidden { display: none !important; }
+            .sr-only {
+                position: absolute;
+                width: 1px; height: 1px;
+                margin: -1px; padding: 0;
+                overflow: hidden;
+                clip-path: inset(50%);
+                white-space: nowrap;
+            }
             .text-gray-400 { color: var(--ink-3); }
             .text-sm { font-size: .86em; }
             .w-full { width: 100%; }
@@ -1302,10 +1298,66 @@
 
     <div class="game-container">
         <header class="masthead">
-            <p class="masthead-overline">IAU · 88 Constellations</p>
-            <h1 class="masthead-title"><span class="num">88</span>별자리 챌린지</h1>
+            <!-- '88'을 진짜 별자리처럼 — 별을 이음선으로 이은 엠블럼 (텍스트가 아니라 성도) -->
+            <div class="masthead-emblem" aria-hidden="true">
+                <svg viewBox="0 0 236 148" xmlns="http://www.w3.org/2000/svg">
+                    <g class="lines">
+                        <g transform="translate(6,6)">
+                            <line class="seg" style="--i:0"  x1="32" y1="20"  x2="66" y2="14"  pathLength="1"/>
+                            <line class="seg" style="--i:1"  x1="66" y1="14"  x2="73" y2="47"  pathLength="1"/>
+                            <line class="seg" style="--i:2"  x1="73" y1="47"  x2="52" y2="66"  pathLength="1"/>
+                            <line class="seg" style="--i:3"  x1="52" y1="66"  x2="29" y2="50"  pathLength="1"/>
+                            <line class="seg" style="--i:4"  x1="29" y1="50"  x2="32" y2="20"  pathLength="1"/>
+                            <line class="seg" style="--i:5"  x1="52" y1="66"  x2="75" y2="87"  pathLength="1"/>
+                            <line class="seg" style="--i:6"  x1="75" y1="87"  x2="69" y2="122" pathLength="1"/>
+                            <line class="seg" style="--i:7"  x1="69" y1="122" x2="34" y2="127" pathLength="1"/>
+                            <line class="seg" style="--i:8"  x1="34" y1="127" x2="26" y2="88"  pathLength="1"/>
+                            <line class="seg" style="--i:9"  x1="26" y1="88"  x2="52" y2="66"  pathLength="1"/>
+                        </g>
+                        <g transform="translate(128,2)">
+                            <line class="seg" style="--i:10" x1="34" y1="22"  x2="68" y2="12"  pathLength="1"/>
+                            <line class="seg" style="--i:11" x1="68" y1="12"  x2="74" y2="48"  pathLength="1"/>
+                            <line class="seg" style="--i:12" x1="74" y1="48"  x2="54" y2="64"  pathLength="1"/>
+                            <line class="seg" style="--i:13" x1="54" y1="64"  x2="28" y2="48"  pathLength="1"/>
+                            <line class="seg" style="--i:14" x1="28" y1="48"  x2="34" y2="22"  pathLength="1"/>
+                            <line class="seg" style="--i:15" x1="54" y1="64"  x2="74" y2="88"  pathLength="1"/>
+                            <line class="seg" style="--i:16" x1="74" y1="88"  x2="66" y2="124" pathLength="1"/>
+                            <line class="seg" style="--i:17" x1="66" y1="124" x2="32" y2="126" pathLength="1"/>
+                            <line class="seg" style="--i:18" x1="32" y1="126" x2="24" y2="86"  pathLength="1"/>
+                            <line class="seg" style="--i:19" x1="24" y1="86"  x2="54" y2="64"  pathLength="1"/>
+                        </g>
+                    </g>
+                    <g class="starsg">
+                        <g transform="translate(6,6)">
+                            <circle class="st-w" cx="32" cy="20"  r="1.8"/>
+                            <path class="spk" d="M57 14H75M66 5V23"/>
+                            <circle class="st-g tw" style="--tw:4.6s" cx="66" cy="14" r="3"/>
+                            <circle class="st-w" cx="73" cy="47"  r="1.8"/>
+                            <circle class="st-w tw" style="--tw:3.4s" cx="52" cy="66" r="3.2"/>
+                            <circle class="st-w" cx="29" cy="50"  r="1.7"/>
+                            <circle class="st-w" cx="75" cy="87"  r="1.9"/>
+                            <path class="spk" d="M61 122H77M69 114V130"/>
+                            <circle class="st-g tw" style="--tw:5.6s" cx="69" cy="122" r="2.8"/>
+                            <circle class="st-w" cx="34" cy="127" r="1.8"/>
+                            <circle class="st-w" cx="26" cy="88"  r="1.7"/>
+                        </g>
+                        <g transform="translate(128,2)">
+                            <circle class="st-w" cx="34" cy="22"  r="1.8"/>
+                            <circle class="st-w tw" style="--tw:4.2s" cx="68" cy="12" r="2.8"/>
+                            <circle class="st-w" cx="74" cy="48"  r="1.8"/>
+                            <path class="spk" d="M45 64H63M54 55V73"/>
+                            <circle class="st-g tw" style="--tw:5s" cx="54" cy="64" r="3"/>
+                            <circle class="st-w" cx="28" cy="48"  r="1.7"/>
+                            <circle class="st-w" cx="74" cy="88"  r="1.9"/>
+                            <circle class="st-w" cx="66" cy="124" r="2.4"/>
+                            <circle class="st-w" cx="32" cy="126" r="1.8"/>
+                            <circle class="st-w" cx="24" cy="86"  r="1.7"/>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+            <h1 class="masthead-title"><span class="sr-only">88</span>별자리 챌린지</h1>
             <p class="masthead-sub">별이 빛나는 밤하늘 도감 — 학습 · 퀴즈 · 타임어택</p>
-            <div class="masthead-divider" aria-hidden="true">✦</div>
         </header>
 
         <!-- 진행률 -->
