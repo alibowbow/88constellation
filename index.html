@@ -421,12 +421,74 @@
                     margin-inline: auto;
                 }
             }
+            /* ===== 타이틀 — 아이스 네온 튜브 워드마크 =====
+               면(글자)은 명도 88~99% 아이스 화이트만(좀비 구조적 차단),
+               색은 면이 아니라 시안 네온 글로우(정적 text-shadow)에만.
+               글자별 등장 + 샴페인 광택 1회 스윕(주기의 86%는 정지). */
             .masthead-title {
-                font-size: clamp(1.35rem, 1.05rem + 3cqw, 1.8rem);
-                font-weight: 650;
-                letter-spacing: -0.01em;
-                line-height: 1.2;
-                color: var(--ink-1); /* 그라데이션 없음 — 순백 워드마크 */
+                font-family: var(--font-sans);
+                font-size: clamp(1.5rem, 1.1rem + 3.4cqw, 2.05rem);
+                font-weight: 760;
+                font-variation-settings: "wght" 760;
+                letter-spacing: -0.008em;
+                line-height: 1.18;
+                text-align: center;
+                white-space: nowrap;
+                color: transparent;
+                transition: opacity .6s var(--ease-out);
+                @starting-style { opacity: 0; }
+            }
+            .masthead-title .ch {
+                display: inline-block;
+                /* [1층 광택 글린트] + [2층 아이스 화이트 코어]를 글자 모양으로 클립 */
+                background:
+                    linear-gradient(115deg,
+                        transparent 0 42%,
+                        oklch(98% 0.035 92 / .95) 49%,
+                        oklch(100% 0.01 210 / .95) 51%,
+                        transparent 58% 100%) 180% 0 / 260% 100% no-repeat,
+                    linear-gradient(180deg,
+                        oklch(99% 0.006 210) 0%,
+                        oklch(95% 0.03 208) 48%,
+                        oklch(88% 0.06 206) 100%);
+                -webkit-background-clip: text;
+                        background-clip: text;
+                -webkit-text-fill-color: transparent;
+                /* 시안 단일색 네온 글로우(다층) + 딥네이비 컨택트 섀도 — 엠블럼 네온 계승 */
+                text-shadow:
+                    0 0 1px  oklch(100% 0.02 210 / .95),
+                    0 0 7px  oklch(90% 0.13 205 / .70),
+                    0 0 17px oklch(82% 0.15 205 / .55),
+                    0 0 34px oklch(74% 0.16 207 / .40),
+                    0 0 66px oklch(68% 0.15 210 / .22),
+                    0 2px 14px oklch(8% 0.03 265 / .70);
+                opacity: 0;
+                translate: 0 .42em;
+                filter: blur(9px);
+                animation:
+                    ch-rise .78s var(--ease-out) calc(.12s + var(--i) * .075s) both,
+                    ch-sheen 6.5s ease-in-out calc(1.9s + var(--i) * .06s) infinite;
+            }
+            .masthead-title .ch--space { width: .34em; }
+            @keyframes ch-rise {
+                from { opacity: 0; translate: 0 .42em; filter: blur(9px); }
+                60%  { filter: blur(0); }
+                to   { opacity: 1; translate: 0 0; filter: blur(0); }
+            }
+            @keyframes ch-sheen {
+                0%   { background-position: 180% 0, 0 0; }
+                14%  { background-position: -90% 0, 0 0; }
+                100% { background-position: -90% 0, 0 0; }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .masthead-title { transition: none; }
+                .masthead-title .ch {
+                    animation: none;
+                    opacity: 1;
+                    translate: 0 0;
+                    filter: none;
+                    background-position: -200% 0, 0 0;
+                }
             }
             .masthead-sub {
                 margin-top: 8px;
@@ -1180,6 +1242,15 @@
                 .progress { margin-inline: -14px; }
                 .progress-text { right: 14px; }
                 .filter-bar { padding-inline: 14px; margin-inline: -14px; }
+                /* 타이틀 네온 글로우 반경 축소 — 위 88 엠블럼으로 번지지 않게 */
+                .masthead-title .ch {
+                    text-shadow:
+                        0 0 1px  oklch(100% 0.02 210 / .95),
+                        0 0 6px  oklch(90% 0.13 205 / .70),
+                        0 0 14px oklch(82% 0.15 205 / .52),
+                        0 0 26px oklch(74% 0.16 207 / .32),
+                        0 2px 12px oklch(8% 0.03 265 / .70);
+                }
             }
         }
 
@@ -1287,7 +1358,15 @@
             <div class="masthead-emblem" aria-hidden="true">
                 <img class="emblem-img" src="./emblem.webp?v=1" alt="">
             </div>
-            <h1 class="masthead-title"><span class="sr-only">88</span>별자리 챌린지</h1>
+            <h1 class="masthead-title" aria-label="88별자리 챌린지">
+                <span class="ch" style="--i:0" aria-hidden="true">별</span>
+                <span class="ch" style="--i:1" aria-hidden="true">자</span>
+                <span class="ch" style="--i:2" aria-hidden="true">리</span>
+                <span class="ch ch--space" style="--i:3" aria-hidden="true">&nbsp;</span>
+                <span class="ch" style="--i:4" aria-hidden="true">챌</span>
+                <span class="ch" style="--i:5" aria-hidden="true">린</span>
+                <span class="ch" style="--i:6" aria-hidden="true">지</span>
+            </h1>
             <p class="masthead-sub">별이 빛나는 밤하늘 도감 — 학습 · 퀴즈 · 타임어택</p>
         </header>
 
