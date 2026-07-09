@@ -407,10 +407,13 @@
                장식 텍스트가 아니라 앱의 정체성: 실측 성도처럼 별을 이음선으로 이어 그린 88 */
             .masthead { margin-bottom: clamp(26px, 5.5svh, 46px); }
             .masthead-emblem {
-                width: clamp(200px, 52cqw, 300px);
-                margin: 0 auto 8px;
+                display: flex;
+                justify-content: center;
+                margin: 0 auto 6px;
 
-                svg { display: block; width: 100%; height: auto; overflow: visible; }
+                /* 세로형 이미지 → 높이 기준으로 크기 제어(로고 높이 일정 유지) */
+                .emblem-img { display: block; height: clamp(122px, 25svh, 182px); width: auto; max-width: 90vw; }
+                svg { display: block; height: clamp(122px, 25svh, 182px); width: auto; max-width: 90vw; overflow: visible; }
 
                 /* 이음선 — 네온 시안 튜브 글로우. 로드 시 별에서 별로 그려짐 */
                 .lines {
@@ -1170,7 +1173,8 @@
             /* 좁은 화면: 마스트헤드 응축 */
             @container shell (max-width: 760px) {
                 .masthead { margin-bottom: 22px; }
-                .masthead-emblem { width: clamp(178px, 48cqw, 240px); }
+                .masthead-emblem .emblem-img,
+                .masthead-emblem svg { height: clamp(108px, 22svh, 156px); }
                 .masthead-sub { font-size: .8rem; margin-top: 6px; }
             }
 
@@ -1305,7 +1309,10 @@
         <header class="masthead">
             <!-- '88'을 진짜 별자리처럼 — 별을 이음선으로 이은 엠블럼 (텍스트가 아니라 성도) -->
             <div class="masthead-emblem" aria-hidden="true">
-                <svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg">
+                <!-- 생성 이미지(투명 WebP, 76KB) 우선. 로드 실패 시 아래 벡터 엠블럼으로 폴백 -->
+                <img class="emblem-img" src="./emblem.webp?v=1" alt=""
+                     onerror="this.remove();var s=document.getElementById('emblem-fallback');if(s)s.hidden=false;">
+                <svg id="emblem-fallback" hidden viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg">
                   <g class="lines">
                     <line class="seg" style="--i:0" x1="75.1" y1="29.1" x2="96.2" y2="35.7" pathLength="1"/>
                     <line class="seg" style="--i:1" x1="96.2" y1="35.7" x2="104.6" y2="55.0" pathLength="1"/>
