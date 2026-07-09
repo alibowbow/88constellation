@@ -407,9 +407,10 @@
                장식 텍스트가 아니라 앱의 정체성: 실측 성도처럼 별을 이음선으로 이어 그린 88 */
             .masthead { margin-bottom: clamp(26px, 5.5svh, 46px); }
             .masthead-emblem {
-                width: clamp(150px, 40cqw, 210px);
-                margin: 0 auto 12px;
+                width: clamp(196px, 50cqw, 288px);
+                margin: 0 auto 10px;
 
+                .emblem-img { display: block; width: 100%; height: auto; }
                 svg { display: block; width: 100%; height: auto; overflow: visible; }
 
                 /* 이음선 — 성도와 같은 시안 라인, 로드 시 별에서 별로 그려짐 */
@@ -1165,7 +1166,7 @@
             /* 좁은 화면: 마스트헤드 응축 */
             @container shell (max-width: 760px) {
                 .masthead { margin-bottom: 22px; }
-                .masthead-emblem { width: clamp(128px, 36cqw, 168px); }
+                .masthead-emblem { width: clamp(172px, 46cqw, 232px); }
                 .masthead-sub { font-size: .8rem; margin-top: 6px; }
             }
 
@@ -1300,7 +1301,10 @@
         <header class="masthead">
             <!-- '88'을 진짜 별자리처럼 — 별을 이음선으로 이은 엠블럼 (텍스트가 아니라 성도) -->
             <div class="masthead-emblem" aria-hidden="true">
-                <svg viewBox="0 0 236 148" xmlns="http://www.w3.org/2000/svg">
+                <!-- 생성 이미지(투명 PNG) 우선. 없으면 아래 SVG 엠블럼으로 자동 폴백 -->
+                <img class="emblem-img" src="./title-88.png?v=1" alt=""
+                     onerror="this.remove();var s=document.getElementById('emblem-fallback');if(s)s.hidden=false;">
+                <svg id="emblem-fallback" hidden viewBox="0 0 236 148" xmlns="http://www.w3.org/2000/svg">
                     <g class="lines">
                         <g transform="translate(6,6)">
                             <line class="seg" style="--i:0"  x1="32" y1="20"  x2="66" y2="14"  pathLength="1"/>
