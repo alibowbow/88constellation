@@ -31,6 +31,9 @@
     --radius-xl: 32px;
     --content: 1160px;
     --appbar-height: 72px;
+    --appbar-safe-height: calc(var(--appbar-height) + env(safe-area-inset-top));
+    --shell-padding-top: 24px;
+    --nav-clearance: calc(92px + env(safe-area-inset-bottom));
     --font-sans: "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --font-display: "Space Grotesk", "Pretendard Variable", Pretendard, sans-serif;
     --font-story: "Gowun Batang", "Noto Serif KR", serif;
@@ -45,15 +48,20 @@
   }
 
   html {
-    min-height: 100%;
-    overflow-x: clip;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     -webkit-text-size-adjust: 100%;
   }
 
   body {
     min-width: 320px;
-    min-height: 100%;
+    width: 100%;
+    height: 100%;
     margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   button,
@@ -136,11 +144,18 @@
 
 @layer base {
   body {
+    display: grid;
+    grid-template-rows: var(--appbar-safe-height) minmax(0, 1fr);
     color: var(--ink);
     background: var(--night-900);
     font-family: var(--font-sans);
     line-height: 1.55;
-    overflow-x: clip;
+  }
+
+  @supports (height: 100dvh) {
+    body {
+      height: 100dvh;
+    }
   }
 
   .sky {
@@ -263,15 +278,17 @@
 
 @layer shell {
   .app-bar {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 30;
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    height: var(--appbar-height);
-    padding: 0 18px;
+    height: var(--appbar-safe-height);
+    padding-top: env(safe-area-inset-top);
+    padding-right: max(18px, env(safe-area-inset-right));
+    padding-bottom: 0;
+    padding-left: max(18px, env(safe-area-inset-left));
     border-bottom: 1px solid var(--line);
     background: rgba(7, 23, 36, 0.92);
     backdrop-filter: blur(16px);
@@ -357,6 +374,28 @@
     stroke-width: 1.9;
   }
 
+  .fullscreen-action {
+    position: relative;
+  }
+
+  .fullscreen-exit-icon {
+    display: none;
+  }
+
+  .fullscreen-action.is-active {
+    border-color: var(--cyan);
+    color: var(--night-950);
+    background: var(--cyan);
+  }
+
+  .fullscreen-action.is-active .fullscreen-enter-icon {
+    display: none;
+  }
+
+  .fullscreen-action.is-active .fullscreen-exit-icon {
+    display: block;
+  }
+
   .header-progress {
     display: flex;
     align-items: center;
@@ -406,9 +445,30 @@
 
   .app-shell {
     width: min(calc(100% - 32px), var(--content));
-    min-height: calc(100svh - var(--appbar-height));
+    min-height: 0;
+    height: 100%;
     margin: 0 auto;
-    padding: 24px 0 120px;
+    padding-top: var(--shell-padding-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: var(--nav-clearance);
+    padding-left: env(safe-area-inset-left);
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    scroll-padding-block: 12px var(--nav-clearance);
+    scrollbar-color: rgba(104, 217, 232, 0.38) transparent;
+    scrollbar-width: thin;
+    touch-action: pan-y pinch-zoom;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dialog-open .app-shell {
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  .detail-open .app-shell {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(24px + env(safe-area-inset-bottom));
   }
 
   .app-view {
@@ -418,9 +478,9 @@
   .bottom-nav {
     position: fixed;
     z-index: 40;
-    right: 12px;
+    right: max(12px, env(safe-area-inset-right));
     bottom: calc(10px + env(safe-area-inset-bottom));
-    left: 12px;
+    left: max(12px, env(safe-area-inset-left));
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 3px;
@@ -761,6 +821,67 @@
     background: transparent;
     font-size: 0.73rem;
     font-weight: 800;
+  }
+
+  .list-pagination {
+    position: sticky;
+    z-index: 16;
+    top: 0;
+    display: grid;
+    grid-template-columns: minmax(72px, 1fr) minmax(96px, auto) minmax(72px, 1fr);
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 12px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(7, 23, 36, 0.94);
+    box-shadow: 0 8px 18px rgba(4, 17, 27, 0.18);
+    backdrop-filter: blur(14px);
+  }
+
+  .list-pagination button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 6px 9px;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    color: var(--ink);
+    background: var(--night-750);
+    font-size: 0.7rem;
+    font-weight: 850;
+  }
+
+  .list-pagination button:last-child {
+    justify-self: stretch;
+  }
+
+  .list-pagination button:disabled {
+    color: var(--ink-muted);
+    background: rgba(13, 36, 54, 0.5);
+    opacity: 0.5;
+  }
+
+  .page-status {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    flex-direction: column;
+    color: var(--ink);
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .page-status strong {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+  }
+
+  .page-status small {
+    margin-top: 3px;
+    color: var(--ink-muted);
+    font-size: 0.57rem;
   }
 
   .constellation-list-grid {
@@ -1116,7 +1237,7 @@
   .detail-appbar {
     position: sticky;
     z-index: 20;
-    top: var(--appbar-height);
+    top: 0;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
@@ -1238,7 +1359,9 @@
 
   .sky-slider {
     width: 100%;
+    min-height: 44px;
     accent-color: var(--cyan);
+    cursor: pointer;
   }
 
   .detail-copy {
@@ -1394,7 +1517,7 @@
     min-height: 76px;
     align-items: center;
     gap: 0 12px;
-    margin-top: 30px;
+    margin-top: 18px;
     padding: 12px 16px;
     border: 2px solid var(--ink);
     border-radius: var(--radius-md);
@@ -1498,6 +1621,10 @@
   .page-heading {
     max-width: 720px;
     padding: 20px 0 30px;
+  }
+
+  .game-open .challenge-view > .page-heading {
+    display: none;
   }
 
   .page-heading h1 {
@@ -2028,7 +2155,7 @@
   #time-attack-question {
     position: sticky;
     z-index: 8;
-    top: calc(var(--appbar-height) + 8px);
+    top: 8px;
     min-height: 150px;
     padding: 18px;
   }
@@ -2398,7 +2525,7 @@
   }
 
   .segmented-control button {
-    min-height: 42px;
+    min-height: 44px;
     padding: 6px;
     border-radius: 10px;
     color: var(--ink-muted);
@@ -2416,14 +2543,17 @@
 
 @layer responsive {
   @media (min-width: 560px) {
+    :root {
+      --shell-padding-top: 32px;
+    }
+
     .app-bar {
-      padding-right: max(24px, calc((100vw - var(--content)) / 2));
-      padding-left: max(24px, calc((100vw - var(--content)) / 2));
+      padding-right: max(24px, env(safe-area-inset-right), calc((100vw - var(--content)) / 2));
+      padding-left: max(24px, env(safe-area-inset-left), calc((100vw - var(--content)) / 2));
     }
 
     .app-shell {
       width: min(calc(100% - 48px), var(--content));
-      padding-top: 32px;
     }
 
     .welcome-card {
@@ -2508,7 +2638,7 @@
 
     .image-container {
       position: sticky;
-      top: calc(var(--appbar-height) + 82px);
+      top: 82px;
     }
 
     .sky-chart-wrap {
@@ -2555,6 +2685,7 @@
   @media (min-width: 980px) {
     :root {
       --appbar-height: 78px;
+      --shell-padding-top: 42px;
     }
 
     .brand-mark {
@@ -2568,7 +2699,6 @@
     }
 
     .app-shell {
-      padding-top: 42px;
       padding-bottom: 128px;
     }
 
@@ -2669,6 +2799,37 @@
   }
 
   @media (max-width: 430px) {
+    :root {
+      --appbar-height: 64px;
+      --shell-padding-top: 12px;
+      --nav-clearance: calc(80px + env(safe-area-inset-bottom));
+    }
+
+    .app-bar {
+      padding-right: max(10px, env(safe-area-inset-right));
+      padding-left: max(10px, env(safe-area-inset-left));
+    }
+
+    .brand-button {
+      gap: 7px;
+      padding-right: 0;
+      padding-left: 0;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      flex-basis: 34px;
+    }
+
+    .brand-copy strong {
+      font-size: 0.88rem;
+    }
+
+    .app-bar-actions {
+      gap: 5px;
+    }
+
     .brand-copy small {
       display: none;
     }
@@ -2683,33 +2844,103 @@
     }
 
     .welcome-card {
-      padding: 20px;
+      gap: 12px;
+      padding: 16px;
     }
 
     .welcome-copy h1 {
-      font-size: clamp(2.25rem, 12vw, 3.1rem);
+      margin-top: 7px;
+      font-size: clamp(1.9rem, 10vw, 2.55rem);
+    }
+
+    .welcome-copy > p:not(.eyebrow) {
+      display: -webkit-box;
+      margin-top: 10px;
+      overflow: hidden;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
     }
 
     .welcome-actions {
       display: grid;
       grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+      margin-top: 12px;
     }
 
     .welcome-actions .primary-button,
     .welcome-actions .secondary-button {
+      min-height: 44px;
       padding-right: 8px;
       padding-left: 8px;
       font-size: 0.75rem;
     }
 
+    .featured-sky {
+      min-height: 116px;
+    }
+
+    .featured-map {
+      inset: -10px 0 32px;
+    }
+
+    .featured-caption {
+      padding: 9px 12px;
+    }
+
+    .atlas-section {
+      margin-top: 26px;
+    }
+
+    .section-heading {
+      margin-bottom: 12px;
+    }
+
+    .section-heading h2 {
+      font-size: 1.65rem;
+    }
+
+    .active-filter-summary {
+      margin-bottom: 7px;
+    }
+
+    .list-pagination {
+      margin-bottom: 8px;
+      padding: 4px;
+      border-radius: 12px;
+    }
+
+    .list-pagination button {
+      min-height: 44px;
+      padding-right: 5px;
+      padding-left: 5px;
+      font-size: 0.64rem;
+    }
+
+    .constellation-list-grid {
+      gap: 8px;
+    }
+
+    .constellation-list-item {
+      min-height: 184px;
+      padding: 6px 8px 10px;
+    }
+
+    .card-map {
+      height: 82px;
+    }
+
     .bottom-nav {
-      right: 8px;
-      left: 8px;
+      right: max(8px, env(safe-area-inset-right));
+      left: max(8px, env(safe-area-inset-left));
+      min-height: 62px;
       padding: 5px;
       border-radius: 17px;
     }
 
     .bottom-nav-button {
+      min-height: 48px;
       font-size: 0.62rem;
     }
 
@@ -2749,6 +2980,7 @@
 
     .challenge-card {
       grid-template-columns: 54px minmax(0, 1fr) auto;
+      min-height: 118px;
       padding: 15px;
     }
 
@@ -2774,24 +3006,106 @@
       grid-template-columns: 1fr;
     }
 
+    .page-heading {
+      padding: 6px 0 16px;
+    }
+
+    .page-heading h1 {
+      font-size: 2rem;
+    }
+
+    .page-heading > p:last-child {
+      display: -webkit-box;
+      margin-top: 9px;
+      overflow: hidden;
+      font-size: 0.76rem;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .question-card {
+      min-height: 160px;
+      margin-top: 10px;
+      padding: 16px 14px;
+    }
+
+    .option-button,
+    .time-attack-button {
+      min-height: 62px;
+    }
+
+    .collection-stats {
+      gap: 6px;
+    }
+
+    .collection-progress-card {
+      min-height: 82px;
+      padding: 12px;
+    }
+
+    .mini-stat {
+      min-height: 70px;
+      padding: 10px;
+    }
+
+    .collection-map-card {
+      margin-top: 14px;
+    }
+
     .collection-map-header {
       flex-direction: column;
       gap: 10px;
     }
 
     .collection-map-toolbar {
-      align-items: stretch;
-      flex-direction: column;
+      align-items: center;
+      flex-direction: row;
+      gap: 7px;
+      padding: 6px 8px;
     }
 
     .collection-map-toolbar button {
-      width: 100%;
+      width: auto;
+      min-width: 0;
+      flex: 0 1 auto;
+      padding-right: 8px;
+      padding-left: 8px;
+      font-size: 0.62rem;
+    }
+
+    .collection-map {
+      min-width: 600px;
+    }
+
+    .whole-sky-map {
+      min-height: 300px;
     }
 
     .collection-map-footer {
       align-items: flex-start;
       flex-direction: column;
       gap: 3px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .brand-copy {
+      display: none;
+    }
+
+    .brand-button {
+      min-width: 44px;
+      justify-content: center;
+    }
+
+    .progress-orbit {
+      width: 28px;
+      height: 28px;
+    }
+
+    .progress-orbit > span {
+      width: 20px;
+      height: 20px;
     }
   }
 }
