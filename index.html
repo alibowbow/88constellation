@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>별자리 88 — 하나씩 발견하는 밤하늘 도감</title>
-    <meta name="description" content="국제천문연맹이 정한 88개 별자리를 실제 성도로 탐험하고, 발견하고, 퀴즈로 익히는 인터랙티브 밤하늘 도감입니다.">
+    <title>별자리 88 — 학습·퀴즈·타임어택으로 완성하는 나의 별지도</title>
+    <meta name="description" content="국제천문연맹이 정한 88개 별자리를 실제 성도로 학습하고, 퀴즈와 타임어택에 도전하며 나의 별지도를 완성하는 밤하늘 게임입니다.">
     <meta name="theme-color" content="#071724">
     <meta name="color-scheme" content="dark">
     <link rel="preconnect" href="https://fastly.jsdelivr.net" crossorigin>
@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" crossorigin href="https://fastly.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendard-dynamic-subset.min.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Gowun+Batang:wght@400;700&display=swap">
-    <link rel="stylesheet" href="./styles.css?v=3">
+    <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
     <div class="sky" aria-hidden="true">
@@ -24,7 +24,7 @@
 
     <header class="app-bar">
         <button id="brand-home-button" class="brand-button" type="button" aria-label="탐험 홈으로 이동">
-            <span class="brand-mark"><img src="./emblem.webp?v=1" alt=""></span>
+            <span class="brand-mark"><img src="./emblem.webp?v=2" alt=""></span>
             <span class="brand-copy">
                 <strong>별자리 88</strong>
                 <small>POCKET SKY ATLAS</small>
@@ -34,9 +34,9 @@
             <button id="surprise-button" class="round-action" type="button" aria-label="무작위 별자리 열기" title="무작위 별자리">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h2.2c4.8 0 4.5 10 9.6 10H19m0 0-2.5-2.5M19 17l-2.5 2.5M5 17h2.2c1.4 0 2.3-.9 3-2.1M14 9.1C14.8 7.8 15.7 7 16.8 7H19m0 0-2.5-2.5M19 7l-2.5 2.5"/></svg>
             </button>
-            <button id="header-progress-button" class="header-progress" type="button" aria-label="나의 하늘 보기">
+            <button id="header-progress-button" class="header-progress" type="button" aria-label="나의 별자리 보기">
                 <span class="progress-orbit" aria-hidden="true"><span id="header-progress-ring"></span></span>
-                <span class="progress-copy"><strong id="header-progress-count">0</strong><small>/ 88 발견</small></span>
+                <span class="progress-copy"><strong id="header-progress-count">0</strong><small>/ 88 등록</small></span>
             </button>
         </div>
     </header>
@@ -46,15 +46,15 @@
             <div id="explore-list-screen" class="explore-list-screen">
                 <section id="welcome-card" class="welcome-card">
                     <div class="welcome-copy">
-                        <p class="eyebrow">오늘의 관측 미션</p>
-                        <h1 id="explore-heading">별 하나에서<br>밤하늘 전체로</h1>
-                        <p id="welcome-message">88개의 별자리를 실제 별의 배치로 하나씩 발견해 보세요.</p>
+                        <p class="eyebrow">88 CONSTELLATION CHALLENGE</p>
+                        <h1 id="explore-heading">배우고, 맞히고,<br>별지도를 완성하세요</h1>
+                        <p id="welcome-message">88개의 별자리를 실제 별의 배치로 익히며 나의 별지도를 완성해 보세요.</p>
                         <div class="welcome-actions">
                             <button id="continue-explore-button" class="primary-button" type="button">
-                                <span id="continue-label">첫 별자리 만나기</span>
+                                <span id="continue-label">첫 별자리 학습하기</span>
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
                             </button>
-                            <button id="random-explore-button" class="secondary-button" type="button">랜덤 탐험</button>
+                            <button id="random-explore-button" class="secondary-button" type="button">무작위 학습</button>
                         </div>
                     </div>
                     <button id="featured-constellation" class="featured-sky" type="button" aria-label="오늘의 별자리 열기">
@@ -122,8 +122,8 @@
                         <div id="description" class="description"></div>
                         <button id="complete-button" class="complete-button" type="button">
                             <span class="complete-icon" aria-hidden="true">✦</span>
-                            <span class="complete-label">발견 완료</span>
-                            <small>내 별지도에 기록하기</small>
+                            <span class="complete-label">나의 별자리에 등록</span>
+                            <small>전체 별지도에 이 별을 밝히기</small>
                         </button>
                     </div>
                 </div>
@@ -176,7 +176,7 @@
 
             <section id="quiz-panel" class="game-panel hidden" aria-labelledby="quiz-panel-title">
                 <header class="game-panel-header">
-                    <button id="quiz-back-button" class="panel-back" type="button">← 도전 선택</button>
+                    <button id="quiz-back-button" class="panel-back" type="button">← 학습으로</button>
                     <div class="game-panel-title">
                         <span>별자리 퀴즈</span>
                         <strong id="quiz-panel-title"><span id="quiz-round">1</span> / 10</strong>
@@ -193,7 +193,7 @@
 
             <section id="time-attack-panel" class="game-panel hidden" aria-labelledby="time-attack-title">
                 <header class="game-panel-header">
-                    <button id="time-attack-back-button" class="panel-back" type="button">← 도전 선택</button>
+                    <button id="time-attack-back-button" class="panel-back" type="button">← 학습으로</button>
                     <div class="game-panel-title">
                         <span>스피드 찾기</span>
                         <strong id="time-attack-title">도전 설정</strong>
@@ -235,16 +235,16 @@
 
         <section id="collection-view" class="app-view collection-view hidden" aria-labelledby="collection-heading">
             <header class="page-heading collection-heading">
-                <p class="eyebrow">MY NIGHT SKY</p>
-                <h1 id="collection-heading">나의 하늘</h1>
-                <p>발견한 별과 다시 보고 싶은 별, 헷갈렸던 별을 한곳에 모았습니다.</p>
+                <p class="eyebrow">MY CONSTELLATION MAP</p>
+                <h1 id="collection-heading">나의 별자리</h1>
+                <p>등록한 별자리가 실제 하늘의 위치에서 하나씩 빛납니다. 88개의 성도를 모두 밝혀 나만의 밤하늘을 완성하세요.</p>
             </header>
 
             <div class="collection-stats">
                 <div class="collection-progress-card">
                     <span class="big-progress"><strong id="collection-learned-count">0</strong><small>/ 88</small></span>
                     <div>
-                        <strong>발견한 별자리</strong>
+                        <strong>별지도 완성도</strong>
                         <div class="collection-progress-track"><span id="collection-progress-fill"></span></div>
                     </div>
                 </div>
@@ -252,8 +252,30 @@
                 <div class="mini-stat"><span aria-hidden="true">↻</span><strong id="collection-review-count">0</strong><small>복습 필요</small></div>
             </div>
 
-            <div id="collection-tabs" class="segmented-control" role="tablist" aria-label="나의 하늘 분류">
-                <button type="button" role="tab" aria-selected="true" data-collection="learned">발견 완료</button>
+            <section class="collection-map-card" aria-labelledby="collection-map-heading">
+                <header class="collection-map-header">
+                    <div>
+                        <p class="eyebrow">88-STAR QUEST MAP</p>
+                        <h2 id="collection-map-heading">전체 별자리 도감</h2>
+                        <p id="collection-map-status">등록한 별자리가 실제 위치에서 빛납니다.</p>
+                    </div>
+                    <span id="collection-rank" class="collection-rank">관측 준비</span>
+                </header>
+                <div class="collection-map-toolbar">
+                    <span class="map-legend"><i class="map-dot registered"></i>등록 <i class="map-dot locked"></i>미등록</span>
+                    <button id="collection-map-next-button" type="button">다음 미등록 별자리</button>
+                </div>
+                <div id="collection-map-viewport" class="collection-map-viewport" tabindex="0" role="region" aria-label="88개 별자리 전체 지도. 작은 화면에서는 좌우로 밀어서 탐색할 수 있습니다.">
+                    <div id="collection-map" class="collection-map"></div>
+                </div>
+                <div class="collection-map-footer">
+                    <strong id="collection-map-progress-label">0% 완성</strong>
+                    <span id="collection-next-milestone">8개 등록까지 8개 남음</span>
+                </div>
+            </section>
+
+            <div id="collection-tabs" class="segmented-control" role="tablist" aria-label="나의 별자리 분류">
+                <button type="button" role="tab" aria-selected="true" data-collection="learned">등록한 별자리</button>
                 <button type="button" role="tab" aria-selected="false" data-collection="bookmarked">북마크</button>
                 <button type="button" role="tab" aria-selected="false" data-collection="review">복습 필요</button>
             </div>
@@ -267,18 +289,22 @@
         </section>
     </main>
 
-    <nav id="mode-selection" class="bottom-nav" aria-label="주요 메뉴">
+    <nav id="mode-selection" class="bottom-nav" aria-label="게임 모드">
         <button id="learn-mode-button" class="bottom-nav-button selected" type="button" data-view="explore" aria-current="page">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 4.8L19 10l-4.8 2.2L12 17l-2.2-4.8L5 10l4.8-2.2L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg>
-            <span>탐험</span>
+            <span>학습</span>
         </button>
-        <button id="challenge-nav-button" class="bottom-nav-button" type="button" data-view="challenge">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M9 20h6M12 14v6M7 7H4v1a4 4 0 0 0 4 4M17 7h3v1a4 4 0 0 1-4 4"/></svg>
-            <span>도전</span>
+        <button id="quiz-nav-button" class="bottom-nav-button" type="button" data-view="quiz">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Z"/><path d="M9 9a3 3 0 1 1 4.5 2.6c-1 .6-1.5 1.1-1.5 2.4M12 17h.01"/></svg>
+            <span>퀴즈</span>
+        </button>
+        <button id="time-attack-nav-button" class="bottom-nav-button" type="button" data-view="speed">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8M9 2h6M17 5l2 2"/></svg>
+            <span>타임어택</span>
         </button>
         <button id="bookmark-view-button" class="bottom-nav-button" type="button" data-view="collection">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg>
-            <span>나의 하늘</span>
+            <span>나의 별자리</span>
         </button>
     </nav>
 
@@ -300,8 +326,8 @@
                 <button type="button" data-filter="zodiac"><span>◎</span><strong>황도 12궁</strong><small>태양이 지나는 길</small></button>
                 <button type="button" data-filter="북"><span>↑</span><strong>북쪽 하늘</strong><small>북반구 중심</small></button>
                 <button type="button" data-filter="남"><span>↓</span><strong>남쪽 하늘</strong><small>남반구 중심</small></button>
-                <button type="button" data-filter="unlearned"><span>○</span><strong>미발견</strong><small>아직 남은 별</small></button>
-                <button type="button" data-filter="learned"><span>✓</span><strong>발견 완료</strong><small>기록한 별</small></button>
+                <button type="button" data-filter="unlearned"><span>○</span><strong>미등록</strong><small>아직 남은 별</small></button>
+                <button type="button" data-filter="learned"><span>✓</span><strong>등록 완료</strong><small>나의 별자리</small></button>
             </div>
         </form>
     </dialog>
@@ -513,6 +539,6 @@
         });
 
     </script>
-    <script src="./app.js?v=3"></script>
+    <script src="./app.js?v=4"></script>
 </body>
 </html>

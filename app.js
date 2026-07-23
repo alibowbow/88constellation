@@ -18,13 +18,30 @@
         zodiac: '황도 12궁',
         북: '북쪽 하늘',
         남: '남쪽 하늘',
-        unlearned: '미발견',
-        learned: '발견 완료'
+        unlearned: '미등록',
+        learned: '등록 완료'
     };
 
     const QUIZ_ROUNDS = 10;
     const VALID_SPEED_COUNTS = new Set([8, 20, 44, 88]);
+    const WHOLE_SKY_WIDTH = 1000;
+    const WHOLE_SKY_HEIGHT = 500;
+    const PROGRESS_MILESTONES = [
+        { count: 8, rank: '별길잡이' },
+        { count: 20, rank: '성도 탐험가' },
+        { count: 44, rank: '밤하늘 해설가' },
+        { count: 88, rank: '88 별자리 마스터' }
+    ];
+    const STORY_WEBTOONS = {
+        Lyra: {
+            src: './assets/webtoons/01-lyra-webtoon.webp',
+            width: 864,
+            height: 1821,
+            alt: '오르페우스가 리라를 연주해 모든 생명을 매혹시키고, 리라가 별빛을 따라 하늘로 올라 베가와 함께 거문고자리가 되는 4컷 웹툰'
+        }
+    };
     const miniSvgCache = new Map();
+    let wholeSkyStaticCache = '';
 
     const byId = (id) => document.getElementById(id);
     const elements = {
@@ -104,6 +121,13 @@
         collectionEmptyTitle: byId('collection-empty-title'),
         collectionEmptyCopy: byId('collection-empty-copy'),
         collectionExplore: byId('collection-explore-button'),
+        collectionMap: byId('collection-map'),
+        collectionMapViewport: byId('collection-map-viewport'),
+        collectionMapStatus: byId('collection-map-status'),
+        collectionMapNext: byId('collection-map-next-button'),
+        collectionMapProgressLabel: byId('collection-map-progress-label'),
+        collectionNextMilestone: byId('collection-next-milestone'),
+        collectionRank: byId('collection-rank'),
         toast: byId('toast')
     };
 
@@ -122,13 +146,6 @@
             korean: match ? match[1] : String(constellation.name || ''),
             english: match ? match[2] : String(constellation.name || '')
         };
-    }
-
-    function koreanTitleParts(constellation) {
-        const korean = parseName(constellation).korean;
-        return korean.endsWith('자리')
-            ? { core: korean.slice(0, -2), suffix: '자리' }
-            : { core: korean, suffix: '' };
     }
 
     function keyFor(constellation) {
@@ -225,11 +242,16 @@
         detailOpenedInternally: false,
         detailReturnHash: '#explore',
         currentRoute: '',
+        routeRenderToken: 0,
         quiz: null,
         speed: null,
         sky: null,
         toastTimer: 0,
         resizeTimer: 0,
+        mapPointer: null,
+        mapSuppressClickUntil: 0,
+        mapScrollLeft: null,
+        mapScrollRatio: 0.5,
         scroll: Object.create(null)
     };
 
@@ -275,7 +297,7 @@
     function statusText(constellation) {
         const key = keyFor(constellation);
         const statuses = [];
-        if (state.learned.has(key)) statuses.push('발견 완료');
+        if (state.learned.has(key)) statuses.push('나의 별자리에 등록');
         if (state.bookmarks.has(key)) statuses.push('북마크');
         if (state.mistakes.has(key)) statuses.push('복습 필요');
         return statuses.join(', ');
@@ -395,7 +417,7 @@
         const learnedCount = state.learned.size;
         const percentage = total ? (learnedCount / total) * 100 : 0;
         elements.headerProgressCount.textContent = String(learnedCount);
-        elements.headerProgress.setAttribute('aria-label', `나의 하늘 보기, ${total}개 중 ${learnedCount}개 발견`);
+        elements.headerProgress.setAttribute('aria-label', `나의 별자리 보기, ${total}개 중 ${learnedCount}개 등록`);
         elements.headerProgressRing.style.setProperty('--progress', `${percentage}%`);
         elements.headerProgressRing.style.setProperty('--progress-angle', `${percentage * 3.6}deg`);
         elements.collectionLearned.textContent = String(learnedCount);
@@ -406,11 +428,11 @@
         const target = nextUnlearned();
         const targetName = parseName(target).korean;
         elements.continueLabel.textContent = learnedCount
-            ? (learnedCount === total ? '완성한 별지도 다시 보기' : `다음 별 · ${targetName}`)
-            : '첫 별자리 만나기';
+            ? (learnedCount === total ? '완성한 별지도 보기' : `다음 학습 · ${targetName}`)
+            : '첫 별자리 학습하기';
         elements.welcomeMessage.textContent = learnedCount
-            ? `${total}개 중 ${learnedCount}개를 발견했어요. 다음 별을 이어서 만나보세요.`
-            : `${total}개의 별자리를 실제 별의 배치로 하나씩 발견해 보세요.`;
+            ? `${total}개 중 ${learnedCount}개를 등록했어요. 학습·퀴즈·타임어택으로 별지도를 이어서 완성하세요.`
+            : `${total}개의 별자리를 실제 별의 배치로 익히며 나의 별지도를 완성해 보세요.`;
     }
 
     function showToast(message) {
@@ -482,7 +504,7 @@
             return { kind: 'detail', key: `constellation/${parts[1] || ''}`, item: findRouteConstellation(parts[1]) };
         }
         if (parts[0] === 'challenge') {
-            const panel = parts[1] === 'quiz' || parts[1] === 'speed' ? parts[1] : 'hub';
+            const panel = parts[1] === 'speed' ? 'speed' : 'quiz';
             return { kind: 'challenge', key: `challenge/${panel}`, panel };
         }
         if (parts[0] === 'collection') {
@@ -507,11 +529,11 @@
         });
     }
 
-    function showPrimaryView(view) {
+    function showPrimaryView(view, navigationView = view) {
         setHidden(elements.exploreView, view !== 'explore');
         setHidden(elements.challengeView, view !== 'challenge');
         setHidden(elements.collectionView, view !== 'collection');
-        updatePrimaryNavigation(view);
+        updatePrimaryNavigation(navigationView);
     }
 
     function focusElement(element) {
@@ -587,12 +609,30 @@
         return `<section class="info-block"><span class="info-key">${escapeHTML(label)}</span><p class="info-text">${escapeHTML(value)}</p></section>`;
     }
 
+    function storyBlock(constellation) {
+        if (!constellation.story) return '';
+        const webtoon = STORY_WEBTOONS[keyFor(constellation)];
+        if (!webtoon) return infoBlock('별에 얽힌 이야기', constellation.story);
+        return `
+            <section class="story-webtoon" aria-labelledby="story-webtoon-heading">
+                <header class="story-webtoon-heading">
+                    <span id="story-webtoon-heading" class="info-key">별에 얽힌 이야기</span>
+                    <span>WEBTOON 01 / 88</span>
+                </header>
+                <figure>
+                    <img src="${escapeHTML(webtoon.src)}" width="${webtoon.width}" height="${webtoon.height}"
+                        loading="lazy" decoding="async" alt="${escapeHTML(webtoon.alt)}">
+                    <figcaption class="sr-only">${escapeHTML(constellation.story)}</figcaption>
+                </figure>
+            </section>
+        `;
+    }
+
     function renderDetailCopy(constellation) {
         const names = parseName(constellation);
-        const title = koreanTitleParts(constellation);
         elements.constellationName.innerHTML = `
             <p class="detail-eyebrow">${escapeHTML(names.english.toUpperCase())} <span>· ${escapeHTML(constellation.abbr)}</span></p>
-            <h1 id="detail-title"><span class="title-core">${escapeHTML(title.core)}</span><span class="title-suffix">${escapeHTML(title.suffix)}</span></h1>
+            <h1 id="detail-title"><span class="title-core">${escapeHTML(names.korean)}</span></h1>
             <p class="detail-english">${escapeHTML(names.english)} · ${escapeHTML(constellation.mean || '')}</p>
             <div class="detail-tags">${detailTags(constellation)}</div>
         `;
@@ -606,7 +646,7 @@
                 ${infoRow('관측 계절', constellation.season)}
                 ${infoRow('하늘 위치', constellation.location)}
             </div>
-            ${infoBlock('별에 얽힌 이야기', constellation.story)}
+            ${storyBlock(constellation)}
             ${infoBlock('모양과 특징', constellation.characteristics)}
             ${infoBlock('알아두면 좋은 사실', constellation.fact)}
         `;
@@ -622,11 +662,14 @@
 
         elements.complete.classList.toggle('is-complete', learned);
         elements.complete.setAttribute('aria-pressed', learned ? 'true' : 'false');
-        elements.complete.disabled = learned;
-        elements.complete.querySelector('.complete-label').textContent = learned ? '발견 기록됨' : '발견 완료';
+        elements.complete.disabled = false;
+        elements.complete.querySelector('.complete-icon').textContent = learned ? '✓' : '✦';
+        elements.complete.querySelector('.complete-label').textContent = learned
+            ? '나의 별자리에서 해제'
+            : '나의 별자리에 등록';
         elements.complete.querySelector('small').textContent = learned
-            ? '나의 하늘에 저장되었습니다'
-            : '내 별지도에 기록하기';
+            ? '누르면 전체 별지도에서 다시 어두워집니다'
+            : '전체 별지도에 이 별을 밝히기';
     }
 
     function renderDetail(constellation) {
@@ -866,15 +909,18 @@
         });
     }
 
-    function completeCurrentConstellation() {
+    function toggleCurrentConstellation() {
         if (!state.current) return;
         const key = keyFor(state.current);
-        if (state.learned.has(key)) return;
-        state.learned.add(key);
+        const wasLearned = state.learned.has(key);
+        if (wasLearned) state.learned.delete(key);
+        else state.learned.add(key);
         writeSet(STORAGE_KEYS.learned, state.learned);
         updateDetailActions(state.current);
         updateProgress();
-        showToast(`${parseName(state.current).korean}를 나의 하늘에 기록했어요`);
+        showToast(wasLearned
+            ? `${parseName(state.current).korean}를 나의 별자리에서 해제했어요`
+            : `${parseName(state.current).korean}를 나의 별자리에 등록했어요`);
     }
 
     function toggleCurrentBookmark() {
@@ -889,7 +935,7 @@
     }
 
     function renderChallenge(panel, enteringPanel) {
-        showPrimaryView('challenge');
+        showPrimaryView('challenge', panel === 'hub' ? '' : (panel === 'speed' ? 'speed' : 'quiz'));
         document.body.classList.remove('detail-open');
         document.body.classList.toggle('game-open', panel !== 'hub');
         document.body.dataset.route = panel === 'hub' ? 'challenge' : `challenge-${panel}`;
@@ -1109,6 +1155,8 @@
             advanceTimer: 0
         };
         elements.speedTitle.textContent = '도전 설정';
+        elements.speedOptions.classList.remove('is-board', 'is-transitioning');
+        elements.speedOptions.innerHTML = '';
         setHidden(elements.speedSettings, false);
         setHidden(elements.speedGame, true);
         setHidden(elements.speedResults, true);
@@ -1125,7 +1173,15 @@
     function speedChoiceMarkup(constellation, language) {
         const names = parseName(constellation);
         const label = language === 'en' ? names.english : names.korean;
-        return `<button class="time-attack-button" type="button" data-abbr="${escapeHTML(constellation.abbr)}">${escapeHTML(label)}</button>`;
+        return `<button class="time-attack-button" type="button" data-abbr="${escapeHTML(constellation.abbr)}" aria-label="${escapeHTML(label)}">${escapeHTML(label)}</button>`;
+    }
+
+    function orderedSpeedBoard(constellationsForGame, language) {
+        const nameKey = language === 'en' ? 'english' : 'korean';
+        const locale = language === 'en' ? 'en' : 'ko';
+        return Array.from(constellationsForGame).sort((left, right) => (
+            parseName(left)[nameKey].localeCompare(parseName(right)[nameKey], locale)
+        ));
     }
 
     function startSpeed() {
@@ -1134,13 +1190,12 @@
         const requestedCount = Number.parseInt(countInput ? countInput.value : '8', 10);
         const count = VALID_SPEED_COUNTS.has(requestedCount) ? requestedCount : 8;
         const language = languageInput && languageInput.value === 'en' ? 'en' : 'ko';
+        const questions = shuffled(atlas).slice(0, count);
         cleanupSpeed();
         state.speed = {
             active: true,
-            questions: shuffled(atlas).slice(0, count).map((target) => ({
-                target,
-                choices: createChoiceSet(target)
-            })),
+            questions,
+            board: orderedSpeedBoard(questions, language),
             index: 0,
             errors: 0,
             language,
@@ -1150,13 +1205,19 @@
             pauseStartedAt: 0,
             interval: 0,
             advanceTimer: 0,
-            roundHadError: false
+            roundHadError: false,
+            transitioning: false
         };
         setHidden(elements.speedSettings, true);
         setHidden(elements.speedResults, true);
         setHidden(elements.speedGame, false);
         elements.speedErrors.textContent = '0';
         elements.speedTimer.textContent = '00:00';
+        elements.speedOptions.classList.remove('is-transitioning');
+        elements.speedOptions.classList.add('is-board');
+        elements.speedOptions.innerHTML = state.speed.board
+            .map((constellation) => speedChoiceMarkup(constellation, language))
+            .join('');
         state.speed.interval = window.setInterval(updateSpeedTimer, 250);
         renderSpeedQuestion();
     }
@@ -1178,8 +1239,8 @@
             finishSpeed();
             return;
         }
-        const question = speed.questions[speed.index];
-        const prompt = speedPrompt(question.target, speed.index);
+        const target = speed.questions[speed.index];
+        const prompt = speedPrompt(target, speed.index);
         speed.roundHadError = false;
         elements.speedTitle.textContent = `${speed.index + 1} / ${speed.questions.length}`;
         elements.speedRemaining.textContent = String(speed.questions.length - speed.index);
@@ -1189,28 +1250,27 @@
             <p class="question-clue">${escapeHTML(prompt.clue)}</p>
             <p id="speed-live" class="sr-only" aria-live="polite"></p>
         `;
-        elements.speedOptions.innerHTML = question.choices.map((choice) => speedChoiceMarkup(choice, speed.language)).join('');
-        requestAnimationFrame(() => focusElement(elements.speedOptions.querySelector('button:not([disabled])')));
+        requestAnimationFrame(() => focusElement(elements.speedQuestion.querySelector('h2')));
     }
 
     function answerSpeed(selectedAbbr) {
         const speed = state.speed;
-        if (!speed || !speed.active) return;
-        const question = speed.questions[speed.index];
+        if (!speed || !speed.active || speed.transitioning) return;
+        const target = speed.questions[speed.index];
         const selectedButton = Array.from(elements.speedOptions.querySelectorAll('[data-abbr]'))
             .find((button) => button.dataset.abbr === selectedAbbr);
-        if (!selectedButton || selectedButton.disabled) return;
+        if (!selectedButton || selectedButton.disabled || selectedButton.classList.contains('incorrect')) return;
         const live = byId('speed-live');
-        const targetKey = keyFor(question.target);
+        const targetKey = keyFor(target);
 
-        if (selectedAbbr !== question.target.abbr) {
+        if (selectedAbbr !== target.abbr) {
             speed.errors += 1;
             speed.roundHadError = true;
             state.mistakes.add(targetKey);
             writeSet(STORAGE_KEYS.mistakes, state.mistakes);
             elements.speedErrors.textContent = String(speed.errors);
-            selectedButton.disabled = true;
             selectedButton.classList.add('incorrect');
+            window.setTimeout(() => selectedButton.classList.remove('incorrect'), 360);
             if (live) live.textContent = '오답입니다. 다른 답을 골라보세요.';
             updateProgress();
             return;
@@ -1220,10 +1280,10 @@
             state.mistakes.delete(targetKey);
             writeSet(STORAGE_KEYS.mistakes, state.mistakes);
         }
-        elements.speedOptions.querySelectorAll('button').forEach((button) => {
-            button.disabled = true;
-        });
+        selectedButton.disabled = true;
         selectedButton.classList.add('solved', 'correct');
+        speed.transitioning = true;
+        elements.speedOptions.classList.add('is-transitioning');
         if (live) live.textContent = '정답입니다.';
         updateProgress();
         speed.pauseStartedAt = Date.now();
@@ -1232,6 +1292,8 @@
             state.speed.pausedMilliseconds += Date.now() - state.speed.pauseStartedAt;
             state.speed.pauseStartedAt = 0;
             state.speed.index += 1;
+            state.speed.transitioning = false;
+            elements.speedOptions.classList.remove('is-transitioning');
             renderSpeedQuestion();
         }, 320);
     }
@@ -1264,6 +1326,198 @@
         requestAnimationFrame(() => focusElement(elements.speedResults.querySelector('.result-title')));
     }
 
+    function normalizeRightAscension(value) {
+        const numeric = Number(value) || 0;
+        const normalized = (((numeric + 180) % 360) + 360) % 360 - 180;
+        return normalized === -180 && numeric > 0 ? 180 : normalized;
+    }
+
+    function hammerProject(raDegrees, decDegrees) {
+        const lambda = -normalizeRightAscension(raDegrees) * Math.PI / 180;
+        const phi = Math.max(-90, Math.min(90, Number(decDegrees) || 0)) * Math.PI / 180;
+        const denominator = Math.sqrt(Math.max(0.000001, 1 + Math.cos(phi) * Math.cos(lambda / 2)));
+        const x = (2 * Math.SQRT2 * Math.cos(phi) * Math.sin(lambda / 2)) / denominator;
+        const y = (Math.SQRT2 * Math.sin(phi)) / denominator;
+        const padding = 18;
+        return [
+            WHOLE_SKY_WIDTH / 2 + (x / (2 * Math.SQRT2)) * (WHOLE_SKY_WIDTH / 2 - padding),
+            WHOLE_SKY_HEIGHT / 2 - (y / Math.SQRT2) * (WHOLE_SKY_HEIGHT / 2 - padding)
+        ];
+    }
+
+    function splitSkySegmentAtSeam(first, second) {
+        const ra1 = normalizeRightAscension(first[0]);
+        const ra2 = normalizeRightAscension(second[0]);
+        const dec1 = Number(first[1]) || 0;
+        const dec2 = Number(second[1]) || 0;
+        const rawDelta = ra2 - ra1;
+        if (Math.abs(rawDelta) <= 180) return [[ [ra1, dec1], [ra2, dec2] ]];
+
+        const unwrappedRa2 = rawDelta > 180 ? ra2 - 360 : ra2 + 360;
+        const boundary = unwrappedRa2 > 180 ? 180 : -180;
+        const ratio = (boundary - ra1) / (unwrappedRa2 - ra1);
+        const boundaryDec = dec1 + (dec2 - dec1) * ratio;
+        return [
+            [[ra1, dec1], [boundary, boundaryDec]],
+            [[-boundary, boundaryDec], [ra2, dec2]]
+        ];
+    }
+
+    function sphericalCenterFor(lines) {
+        const points = lines.flat();
+        if (!points.length) return [0, 0];
+        const sum = points.reduce((total, point) => {
+            const vector = vectorFor(point[0], point[1]);
+            total[0] += vector[0];
+            total[1] += vector[1];
+            total[2] += vector[2];
+            return total;
+        }, [0, 0, 0]);
+        const length = Math.hypot(sum[0], sum[1], sum[2]) || 1;
+        return coordinatesFor(sum.map((value) => value / length));
+    }
+
+    function projectedPointString(point) {
+        const projected = hammerProject(point[0], point[1]);
+        return `${projected[0].toFixed(2)},${projected[1].toFixed(2)}`;
+    }
+
+    function wholeSkyStaticMarkup() {
+        if (wholeSkyStaticCache) return wholeSkyStaticCache;
+        const grid = [];
+        [-60, -30, 0, 30, 60].forEach((declination) => {
+            const points = [];
+            for (let ra = -180; ra <= 180; ra += 5) points.push(projectedPointString([ra, declination]));
+            grid.push(`<polyline points="${points.join(' ')}"/>`);
+        });
+        [-120, -60, 0, 60, 120].forEach((rightAscension) => {
+            const points = [];
+            for (let dec = -90; dec <= 90; dec += 3) points.push(projectedPointString([rightAscension, dec]));
+            grid.push(`<polyline points="${points.join(' ')}"/>`);
+        });
+
+        const stars = SKY_STARS
+            .filter((star) => star[2] <= 4.35)
+            .map((star) => {
+                const point = hammerProject(star[0], star[1]);
+                const radius = Math.max(0.45, 1.65 - star[2] * 0.22);
+                return `<circle cx="${point[0].toFixed(2)}" cy="${point[1].toFixed(2)}" r="${radius.toFixed(2)}"/>`;
+            })
+            .join('');
+        wholeSkyStaticCache = `
+            <ellipse class="whole-map-outline" cx="${WHOLE_SKY_WIDTH / 2}" cy="${WHOLE_SKY_HEIGHT / 2}"
+                rx="${WHOLE_SKY_WIDTH / 2 - 18}" ry="${WHOLE_SKY_HEIGHT / 2 - 18}"/>
+            <g class="whole-map-grid">${grid.join('')}</g>
+            <g class="whole-map-background-stars">${stars}</g>
+        `;
+        return wholeSkyStaticCache;
+    }
+
+    function wholeSkyConstellationMarkup(constellation) {
+        const lines = SKY_LINES[constellation.abbr] || [];
+        const registered = state.learned.has(keyFor(constellation));
+        const segments = [];
+        const starPoints = new Map();
+        lines.forEach((line) => {
+            line.forEach((point) => {
+                const projected = hammerProject(point[0], point[1]);
+                starPoints.set(`${projected[0].toFixed(1)}:${projected[1].toFixed(1)}`, projected);
+            });
+            for (let index = 1; index < line.length; index += 1) {
+                splitSkySegmentAtSeam(line[index - 1], line[index]).forEach((segment) => {
+                    const first = hammerProject(segment[0][0], segment[0][1]);
+                    const second = hammerProject(segment[1][0], segment[1][1]);
+                    segments.push(`<line x1="${first[0].toFixed(2)}" y1="${first[1].toFixed(2)}"
+                        x2="${second[0].toFixed(2)}" y2="${second[1].toFixed(2)}"/>`);
+                });
+            }
+        });
+        const center = hammerProject(...sphericalCenterFor(lines));
+        const stars = registered
+            ? Array.from(starPoints.values()).map((point) => (
+                `<circle class="whole-map-vertex" cx="${point[0].toFixed(2)}" cy="${point[1].toFixed(2)}" r="2.3"/>`
+            )).join('')
+            : '';
+        const names = parseName(constellation);
+        const interactive = registered
+            ? `data-map-abbr="${escapeHTML(constellation.abbr)}" data-map-x="${center[0].toFixed(2)}"
+                data-map-y="${center[1].toFixed(2)}" role="button" tabindex="0"
+                aria-label="${escapeHTML(names.korean)} 상세 보기"`
+            : 'aria-hidden="true"';
+        return `
+            <g class="whole-map-constellation ${registered ? 'is-registered' : 'is-locked'}" ${interactive}>
+                <title>${escapeHTML(names.korean)} · ${registered ? '등록' : '미등록'}</title>
+                <g class="whole-map-lines">${segments.join('')}</g>
+                ${stars}
+                ${registered ? `
+                    <circle class="whole-map-hit" cx="${center[0].toFixed(2)}" cy="${center[1].toFixed(2)}" r="31"/>
+                    <circle class="whole-map-anchor" cx="${center[0].toFixed(2)}" cy="${center[1].toFixed(2)}" r="4"/>
+                    <text x="${center[0].toFixed(2)}" y="${(center[1] - 9).toFixed(2)}">${escapeHTML(constellation.abbr)}</text>
+                ` : ''}
+            </g>
+        `;
+    }
+
+    function progressMilestone(registeredCount) {
+        let rank = '관측 준비';
+        PROGRESS_MILESTONES.forEach((milestone) => {
+            if (registeredCount >= milestone.count) rank = milestone.rank;
+        });
+        return {
+            rank,
+            next: PROGRESS_MILESTONES.find((milestone) => registeredCount < milestone.count) || null
+        };
+    }
+
+    function restoreWholeSkyMapScroll() {
+        const viewport = elements.collectionMapViewport;
+        const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        if (!maxScroll) {
+            viewport.scrollLeft = 0;
+            state.mapScrollLeft = 0;
+            return;
+        }
+        const ratio = Number.isFinite(state.mapScrollRatio)
+            ? Math.max(0, Math.min(1, state.mapScrollRatio))
+            : 0.5;
+        viewport.scrollLeft = maxScroll * ratio;
+        state.mapScrollLeft = viewport.scrollLeft;
+    }
+
+    function renderWholeSkyMap() {
+        const registeredCount = state.learned.size;
+        const percentage = Math.round((registeredCount / atlas.length) * 100);
+        const milestone = progressMilestone(registeredCount);
+        elements.collectionMap.innerHTML = `
+            <svg class="whole-sky-map ${registeredCount === atlas.length ? 'is-complete' : ''}"
+                viewBox="0 0 ${WHOLE_SKY_WIDTH} ${WHOLE_SKY_HEIGHT}" role="group"
+                aria-label="88개 중 ${registeredCount}개가 등록된 전체 별자리 지도">
+                <defs>
+                    <filter id="whole-map-glow" x="-60%" y="-60%" width="220%" height="220%">
+                        <feGaussianBlur stdDeviation="3.2" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                ${wholeSkyStaticMarkup()}
+                <g class="whole-map-atlas">${atlas.map(wholeSkyConstellationMarkup).join('')}</g>
+            </svg>
+        `;
+        elements.collectionMapStatus.textContent = registeredCount === atlas.length
+            ? '88개의 공식 별자리가 모두 빛납니다. 전체 별자리 도감을 완성했습니다.'
+            : `${registeredCount}개의 별자리가 빛나고 있습니다. 등록한 성도를 눌러 상세로 돌아갈 수 있어요.`;
+        elements.collectionRank.textContent = milestone.rank;
+        elements.collectionMapProgressLabel.textContent = `${percentage}% 완성`;
+        elements.collectionNextMilestone.textContent = milestone.next
+            ? `${milestone.next.count}개 등록까지 ${milestone.next.count - registeredCount}개 남음`
+            : '88개 공식 별자리 도감 완성';
+        elements.collectionMapNext.disabled = registeredCount === atlas.length;
+        elements.collectionMapNext.textContent = registeredCount === atlas.length
+            ? '별지도 완성'
+            : '다음 미등록 별자리';
+
+        requestAnimationFrame(restoreWholeSkyMapScroll);
+    }
+
     function collectionItems(collection) {
         if (collection === 'bookmarked') return atlas.filter((item) => state.bookmarks.has(keyFor(item)));
         if (collection === 'review') return atlas.filter((item) => state.mistakes.has(keyFor(item)));
@@ -1276,6 +1530,7 @@
         document.body.classList.remove('detail-open', 'game-open');
         document.body.dataset.route = 'collection';
         updateProgress();
+        renderWholeSkyMap();
 
         elements.collectionTabs.querySelectorAll('[data-collection]').forEach((button) => {
             const selected = button.dataset.collection === collection;
@@ -1288,7 +1543,7 @@
         elements.collectionGrid.innerHTML = items.map(cardMarkup).join('');
         setHidden(elements.collectionEmpty, items.length !== 0);
         const emptyCopy = {
-            learned: ['아직 발견한 별자리가 없어요', '탐험에서 별자리를 살펴보고 발견 완료를 눌러보세요.'],
+            learned: ['아직 등록한 별자리가 없어요', '학습에서 별자리를 살펴보고 나의 별자리에 등록해 보세요.'],
             bookmarked: ['아직 북마크한 별자리가 없어요', '다시 보고 싶은 별의 상세 화면에서 별 버튼을 눌러보세요.'],
             review: ['복습할 별자리가 없어요', '도전에서 헷갈린 별자리가 여기에 자동으로 모입니다.']
         }[collection];
@@ -1298,6 +1553,7 @@
 
     function renderRoute() {
         const route = parseRoute();
+        const renderToken = ++state.routeRenderToken;
         const previousRoute = state.currentRoute;
         saveScrollForCurrentRoute();
         cleanupForRouteChange(previousRoute, route.key);
@@ -1315,8 +1571,11 @@
         }
 
         if (enteringRoute) {
-            const scrollTarget = route.kind === 'detail' ? 0 : (state.scroll[route.key] || 0);
+            const scrollTarget = route.kind === 'detail' || route.kind === 'challenge'
+                ? 0
+                : (state.scroll[route.key] || 0);
             requestAnimationFrame(() => {
+                if (state.routeRenderToken !== renderToken) return;
                 window.scrollTo(0, scrollTarget);
                 focusRouteHeading(route);
             });
@@ -1328,6 +1587,35 @@
         if (!card) return;
         const constellation = byAbbr.get(String(card.dataset.abbr).toLowerCase());
         if (constellation) openConstellation(constellation);
+    }
+
+    function openMapConstellation(target) {
+        const mapItem = target.closest('[data-map-abbr]');
+        if (!mapItem) return;
+        const constellation = byAbbr.get(String(mapItem.dataset.mapAbbr).toLowerCase());
+        if (constellation && state.learned.has(keyFor(constellation))) openConstellation(constellation);
+    }
+
+    function nearestMapConstellation(event) {
+        if (!event.detail || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) return null;
+        const mapSvg = elements.collectionMap.querySelector('.whole-sky-map');
+        const bounds = mapSvg?.getBoundingClientRect();
+        if (!bounds || bounds.width <= 0 || bounds.height <= 0) return null;
+        const mapX = ((event.clientX - bounds.left) / bounds.width) * WHOLE_SKY_WIDTH;
+        const mapY = ((event.clientY - bounds.top) / bounds.height) * WHOLE_SKY_HEIGHT;
+        let nearest = null;
+        let nearestDistance = Number.POSITIVE_INFINITY;
+        elements.collectionMap.querySelectorAll('[data-map-x][data-map-y]').forEach((mapItem) => {
+            const distance = Math.hypot(
+                mapX - Number(mapItem.dataset.mapX),
+                mapY - Number(mapItem.dataset.mapY)
+            );
+            if (distance < nearestDistance) {
+                nearest = mapItem;
+                nearestDistance = distance;
+            }
+        });
+        return nearestDistance <= 31 ? nearest : null;
     }
 
     function handleResultAction(event) {
@@ -1384,7 +1672,7 @@
             }
         });
         elements.bookmark.addEventListener('click', toggleCurrentBookmark);
-        elements.complete.addEventListener('click', completeCurrentConstellation);
+        elements.complete.addEventListener('click', toggleCurrentConstellation);
         elements.prev.addEventListener('click', () => {
             if (!state.current) return;
             const index = atlas.indexOf(state.current);
@@ -1399,14 +1687,15 @@
         elements.modeSelection.addEventListener('click', (event) => {
             const button = event.target.closest('[data-view]');
             if (!button) return;
-            if (button.dataset.view === 'challenge') routeHash('#challenge');
+            if (button.dataset.view === 'quiz') routeHash('#challenge/quiz');
+            else if (button.dataset.view === 'speed') routeHash('#challenge/speed');
             else if (button.dataset.view === 'collection') routeHash(`#collection/${state.collection}`);
             else routeHash('#explore');
         });
         elements.quizMode.addEventListener('click', () => routeHash('#challenge/quiz'));
         elements.speedMode.addEventListener('click', () => routeHash('#challenge/speed'));
-        elements.quizBack.addEventListener('click', () => routeHash('#challenge'));
-        elements.speedBack.addEventListener('click', () => routeHash('#challenge'));
+        elements.quizBack.addEventListener('click', () => routeHash('#explore'));
+        elements.speedBack.addEventListener('click', () => routeHash('#explore'));
         elements.quizOptions.addEventListener('click', (event) => {
             const button = event.target.closest('[data-abbr]');
             if (button) answerQuiz(button.dataset.abbr);
@@ -1438,12 +1727,47 @@
             routeHash(`#collection/${tabs[nextIndex].dataset.collection}`);
         });
         elements.collectionExplore.addEventListener('click', () => routeHash('#explore'));
+        elements.collectionMapNext.addEventListener('click', () => {
+            if (state.learned.size < atlas.length) openConstellation(nextUnlearned());
+        });
+        elements.collectionMap.addEventListener('click', (event) => {
+            if (Date.now() < state.mapSuppressClickUntil) return;
+            openMapConstellation(nearestMapConstellation(event) || event.target);
+        });
+        elements.collectionMap.addEventListener('keydown', (event) => {
+            if (!['Enter', ' '].includes(event.key)) return;
+            const mapItem = event.target.closest('[data-map-abbr]');
+            if (!mapItem) return;
+            event.preventDefault();
+            openMapConstellation(mapItem);
+        });
+        elements.collectionMapViewport.addEventListener('scroll', () => {
+            const viewport = elements.collectionMapViewport;
+            const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+            state.mapScrollLeft = viewport.scrollLeft;
+            if (maxScroll) state.mapScrollRatio = viewport.scrollLeft / maxScroll;
+        }, { passive: true });
+        elements.collectionMapViewport.addEventListener('pointerdown', (event) => {
+            state.mapPointer = { x: event.clientX, y: event.clientY, moved: false };
+        }, { passive: true });
+        elements.collectionMapViewport.addEventListener('pointermove', (event) => {
+            if (!state.mapPointer) return;
+            const distance = Math.hypot(event.clientX - state.mapPointer.x, event.clientY - state.mapPointer.y);
+            if (distance > 8) state.mapPointer.moved = true;
+        }, { passive: true });
+        const finishMapPointer = () => {
+            if (state.mapPointer?.moved) state.mapSuppressClickUntil = Date.now() + 320;
+            state.mapPointer = null;
+        };
+        elements.collectionMapViewport.addEventListener('pointerup', finishMapPointer, { passive: true });
+        elements.collectionMapViewport.addEventListener('pointercancel', finishMapPointer, { passive: true });
 
         window.addEventListener('hashchange', renderRoute);
         window.addEventListener('resize', () => {
             window.clearTimeout(state.resizeTimer);
             state.resizeTimer = window.setTimeout(() => {
                 if (state.sky) drawSky(state.sky.canvas, state.sky.constellation);
+                if (state.currentRoute.startsWith('collection/')) restoreWholeSkyMapScroll();
             }, 120);
         });
         window.addEventListener('storage', (event) => {
