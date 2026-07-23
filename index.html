@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>별자리 88 — 학습·퀴즈·타임어택으로 완성하는 나의 별지도</title>
     <meta name="description" content="국제천문연맹이 정한 88개 별자리를 실제 성도로 학습하고, 퀴즈와 타임어택에 도전하며 나의 별지도를 완성하는 밤하늘 게임입니다.">
     <meta name="theme-color" content="#071724">
@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" crossorigin href="https://fastly.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendard-dynamic-subset.min.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Gowun+Batang:wght@400;700&display=swap">
-    <link rel="stylesheet" href="./styles.css?v=4">
+    <link rel="stylesheet" href="./styles.css?v=5">
 </head>
 <body>
     <div class="sky" aria-hidden="true">
@@ -31,6 +31,10 @@
             </span>
         </button>
         <div class="app-bar-actions">
+            <button id="fullscreen-button" class="round-action fullscreen-action" type="button" aria-label="전체화면 시작" aria-pressed="false" title="전체화면">
+                <svg class="fullscreen-enter-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M20 16v4h-4M8 20H4v-4"/></svg>
+                <svg class="fullscreen-exit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M20 15h-5v5M4 15h5v5"/></svg>
+            </button>
             <button id="surprise-button" class="round-action" type="button" aria-label="무작위 별자리 열기" title="무작위 별자리">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h2.2c4.8 0 4.5 10 9.6 10H19m0 0-2.5-2.5M19 17l-2.5 2.5M5 17h2.2c1.4 0 2.3-.9 3-2.1M14 9.1C14.8 7.8 15.7 7 16.8 7H19m0 0-2.5-2.5M19 7l-2.5 2.5"/></svg>
             </button>
@@ -67,7 +71,7 @@
                     </button>
                 </section>
 
-                <section class="atlas-section" aria-labelledby="atlas-heading">
+                <section id="atlas-section" class="atlas-section" aria-labelledby="atlas-heading">
                     <header class="section-heading">
                         <div>
                             <p class="eyebrow">THE 88 CONSTELLATIONS</p>
@@ -92,6 +96,15 @@
                         <span>전체 별자리</span>
                         <button id="reset-filter-button" class="hidden" type="button">필터 해제</button>
                     </div>
+
+                    <nav id="atlas-pagination" class="list-pagination" aria-label="별자리 도감 페이지">
+                        <button id="atlas-previous-page" type="button" aria-label="이전 별자리 페이지">← 이전</button>
+                        <span class="page-status" aria-live="polite">
+                            <strong id="atlas-page-range">1–12 / 88</strong>
+                            <small id="atlas-page-indicator">1 / 8 페이지</small>
+                        </span>
+                        <button id="atlas-next-page" type="button" aria-label="다음 별자리 페이지">다음 →</button>
+                    </nav>
 
                     <div id="constellation-list-grid" class="constellation-list-grid"></div>
                     <div id="atlas-empty-state" class="empty-state hidden">
@@ -119,12 +132,12 @@
                     <div id="image-container" class="image-container"></div>
                     <div class="detail-copy">
                         <div id="constellation-name" class="constellation-name"></div>
-                        <div id="description" class="description"></div>
                         <button id="complete-button" class="complete-button" type="button">
                             <span class="complete-icon" aria-hidden="true">✦</span>
                             <span class="complete-label">나의 별자리에 등록</span>
                             <small>전체 별지도에 이 별을 밝히기</small>
                         </button>
+                        <div id="description" class="description"></div>
                     </div>
                 </div>
 
@@ -279,6 +292,14 @@
                 <button type="button" role="tab" aria-selected="false" data-collection="bookmarked">북마크</button>
                 <button type="button" role="tab" aria-selected="false" data-collection="review">복습 필요</button>
             </div>
+            <nav id="collection-pagination" class="list-pagination collection-pagination hidden" aria-label="나의 별자리 목록 페이지">
+                <button id="collection-previous-page" type="button" aria-label="이전 나의 별자리 페이지">← 이전</button>
+                <span class="page-status" aria-live="polite">
+                    <strong id="collection-page-range">1–12 / 12</strong>
+                    <small id="collection-page-indicator">1 / 1 페이지</small>
+                </span>
+                <button id="collection-next-page" type="button" aria-label="다음 나의 별자리 페이지">다음 →</button>
+            </nav>
             <div id="collection-grid" class="constellation-list-grid collection-grid"></div>
             <div id="collection-empty-state" class="empty-state hidden">
                 <span class="empty-star" aria-hidden="true">✦</span>
@@ -539,6 +560,6 @@
         });
 
     </script>
-    <script src="./app.js?v=4"></script>
+    <script src="./app.js?v=5"></script>
 </body>
 </html>
