@@ -23,9 +23,11 @@
     };
 
     const QUIZ_ROUNDS = 10;
+    const LIST_PAGE_SIZE = 12;
     const VALID_SPEED_COUNTS = new Set([8, 20, 44, 88]);
     const WHOLE_SKY_WIDTH = 1000;
     const WHOLE_SKY_HEIGHT = 500;
+    const WHOLE_SKY_HIT_RADIUS = 38;
     const PROGRESS_MILESTONES = [
         { count: 8, rank: '별길잡이' },
         { count: 20, rank: '성도 탐험가' },
@@ -47,6 +49,7 @@
     const elements = {
         app: byId('app'),
         brandHome: byId('brand-home-button'),
+        fullscreen: byId('fullscreen-button'),
         surprise: byId('surprise-button'),
         headerProgress: byId('header-progress-button'),
         headerProgressRing: byId('header-progress-ring'),
@@ -72,6 +75,12 @@
         filterDialog: byId('filter-dialog'),
         activeFilterSummary: byId('active-filter-summary'),
         resetFilter: byId('reset-filter-button'),
+        atlasSection: byId('atlas-section'),
+        atlasPagination: byId('atlas-pagination'),
+        atlasPreviousPage: byId('atlas-previous-page'),
+        atlasNextPage: byId('atlas-next-page'),
+        atlasPageRange: byId('atlas-page-range'),
+        atlasPageIndicator: byId('atlas-page-indicator'),
         atlasGrid: byId('constellation-list-grid'),
         atlasCount: byId('atlas-result-count'),
         atlasEmpty: byId('atlas-empty-state'),
@@ -116,6 +125,11 @@
         collectionBookmarks: byId('collection-bookmark-count'),
         collectionReview: byId('collection-review-count'),
         collectionTabs: byId('collection-tabs'),
+        collectionPagination: byId('collection-pagination'),
+        collectionPreviousPage: byId('collection-previous-page'),
+        collectionNextPage: byId('collection-next-page'),
+        collectionPageRange: byId('collection-page-range'),
+        collectionPageIndicator: byId('collection-page-indicator'),
         collectionGrid: byId('collection-grid'),
         collectionEmpty: byId('collection-empty-state'),
         collectionEmptyTitle: byId('collection-empty-title'),
@@ -232,7 +246,13 @@
     const state = {
         filter: 'all',
         query: '',
+        atlasPage: 0,
         collection: 'learned',
+        collectionPages: {
+            learned: 0,
+            bookmarked: 0,
+            review: 0
+        },
         current: null,
         featured: atlas[todayIndex(atlas.length)],
         bookmarks: readSet(STORAGE_KEYS.bookmarks, validStorageKeys),
@@ -379,10 +399,48 @@
         ].filter(Boolean).join(' ').normalize('NFKC').toLocaleLowerCase('ko').includes(term);
     }
 
+    function paginate(items, requestedPage) {
+        const pageCount = Math.ceil(items.length / LIST_PAGE_SIZE);
+        const page = pageCount
+            ? Math.max(0, Math.min(Number(requestedPage) || 0, pageCount - 1))
+            : 0;
+        const start = page * LIST_PAGE_SIZE;
+        return {
+            page,
+            pageCount,
+            start,
+            end: Math.min(start + LIST_PAGE_SIZE, items.length),
+            total: items.length,
+            items: items.slice(start, start + LIST_PAGE_SIZE)
+        };
+    }
+
+    function updateListPagination(controls, page) {
+        const hasMultiplePages = page.pageCount > 1;
+        setHidden(controls.container, !hasMultiplePages);
+        controls.previous.disabled = page.page === 0;
+        controls.next.disabled = page.pageCount === 0 || page.page >= page.pageCount - 1;
+        controls.range.textContent = page.total
+            ? `${page.start + 1}–${page.end} / ${page.total}`
+            : '0 / 0';
+        controls.indicator.textContent = page.pageCount
+            ? `${page.page + 1} / ${page.pageCount} 페이지`
+            : '페이지 없음';
+    }
+
     function renderAtlas() {
         const results = atlas.filter((item) => matchesFilter(item) && matchesSearch(item));
-        elements.atlasGrid.innerHTML = results.map(cardMarkup).join('');
+        const page = paginate(results, state.atlasPage);
+        state.atlasPage = page.page;
+        elements.atlasGrid.innerHTML = page.items.map(cardMarkup).join('');
         elements.atlasCount.textContent = `${results.length}개`;
+        updateListPagination({
+            container: elements.atlasPagination,
+            previous: elements.atlasPreviousPage,
+            next: elements.atlasNextPage,
+            range: elements.atlasPageRange,
+            indicator: elements.atlasPageIndicator
+        }, page);
         setHidden(elements.atlasEmpty, results.length !== 0);
         setHidden(elements.clearSearch, !state.query);
         elements.filterLabel.textContent = FILTER_LABELS[state.filter] || '전체';
@@ -442,8 +500,48 @@
         state.toastTimer = window.setTimeout(() => elements.toast.classList.remove('show'), 2400);
     }
 
+    function fullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+    }
+
+    function updateFullscreenButton() {
+        const active = Boolean(fullscreenElement());
+        elements.fullscreen.classList.toggle('is-active', active);
+        elements.fullscreen.setAttribute('aria-pressed', active ? 'true' : 'false');
+        elements.fullscreen.setAttribute('aria-label', active ? '전체화면 종료' : '전체화면 시작');
+        elements.fullscreen.title = active ? '전체화면 종료' : '전체화면';
+        document.body.classList.toggle('fullscreen-active', active);
+    }
+
+    async function toggleFullscreen() {
+        try {
+            if (fullscreenElement()) {
+                const exit = document.exitFullscreen || document.webkitExitFullscreen;
+                if (exit) await exit.call(document);
+                return;
+            }
+
+            const target = document.documentElement;
+            const request = target.requestFullscreen || target.webkitRequestFullscreen;
+            if (!request) {
+                showToast('이 브라우저는 전체화면 전환을 지원하지 않아요');
+                return;
+            }
+            if (target.requestFullscreen) {
+                await request.call(target, { navigationUI: 'hide' });
+            } else {
+                await request.call(target);
+            }
+        } catch (error) {
+            showToast('전체화면을 시작하지 못했어요. 브라우저 설정을 확인해 주세요.');
+        } finally {
+            updateFullscreenButton();
+        }
+    }
+
     function openFilterDialog() {
         elements.filterToggle.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('dialog-open');
         if (typeof elements.filterDialog.showModal === 'function') {
             if (!elements.filterDialog.open) elements.filterDialog.showModal();
         } else {
@@ -456,6 +554,7 @@
 
     function closeFilterDialog() {
         elements.filterToggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('dialog-open');
         if (typeof elements.filterDialog.close === 'function' && elements.filterDialog.open) {
             elements.filterDialog.close();
         } else {
@@ -470,6 +569,26 @@
             return;
         }
         window.location.hash = normalized;
+    }
+
+    function routeOrScrollTop(hash) {
+        const normalized = hash.startsWith('#') ? hash : `#${hash}`;
+        if (window.location.hash === normalized) {
+            scrollAppTo(0, 'smooth');
+            return;
+        }
+        routeHash(normalized);
+    }
+
+    function scrollAppTo(top, behavior = 'auto') {
+        elements.app.scrollTo({ top: Math.max(0, Number(top) || 0), left: 0, behavior });
+    }
+
+    function scrollAppToElement(element, behavior = 'auto') {
+        if (!element) return;
+        const appBounds = elements.app.getBoundingClientRect();
+        const targetBounds = element.getBoundingClientRect();
+        scrollAppTo(elements.app.scrollTop + targetBounds.top - appBounds.top, behavior);
     }
 
     function replaceRoute(hash) {
@@ -516,7 +635,7 @@
 
     function saveScrollForCurrentRoute() {
         if (state.currentRoute && !state.currentRoute.startsWith('constellation/')) {
-            state.scroll[state.currentRoute] = window.scrollY;
+            state.scroll[state.currentRoute] = elements.app.scrollTop;
         }
     }
 
@@ -1450,7 +1569,7 @@
                 <g class="whole-map-lines">${segments.join('')}</g>
                 ${stars}
                 ${registered ? `
-                    <circle class="whole-map-hit" cx="${center[0].toFixed(2)}" cy="${center[1].toFixed(2)}" r="31"/>
+                    <circle class="whole-map-hit" cx="${center[0].toFixed(2)}" cy="${center[1].toFixed(2)}" r="${WHOLE_SKY_HIT_RADIUS}"/>
                     <circle class="whole-map-anchor" cx="${center[0].toFixed(2)}" cy="${center[1].toFixed(2)}" r="4"/>
                     <text x="${center[0].toFixed(2)}" y="${(center[1] - 9).toFixed(2)}">${escapeHTML(constellation.abbr)}</text>
                 ` : ''}
@@ -1540,7 +1659,16 @@
         });
 
         const items = collectionItems(collection);
-        elements.collectionGrid.innerHTML = items.map(cardMarkup).join('');
+        const page = paginate(items, state.collectionPages[collection]);
+        state.collectionPages[collection] = page.page;
+        elements.collectionGrid.innerHTML = page.items.map(cardMarkup).join('');
+        updateListPagination({
+            container: elements.collectionPagination,
+            previous: elements.collectionPreviousPage,
+            next: elements.collectionNextPage,
+            range: elements.collectionPageRange,
+            indicator: elements.collectionPageIndicator
+        }, page);
         setHidden(elements.collectionEmpty, items.length !== 0);
         const emptyCopy = {
             learned: ['아직 등록한 별자리가 없어요', '학습에서 별자리를 살펴보고 나의 별자리에 등록해 보세요.'],
@@ -1576,7 +1704,7 @@
                 : (state.scroll[route.key] || 0);
             requestAnimationFrame(() => {
                 if (state.routeRenderToken !== renderToken) return;
-                window.scrollTo(0, scrollTarget);
+                scrollAppTo(scrollTarget);
                 focusRouteHeading(route);
             });
         }
@@ -1615,7 +1743,7 @@
                 nearestDistance = distance;
             }
         });
-        return nearestDistance <= 31 ? nearest : null;
+        return nearestDistance <= WHOLE_SKY_HIT_RADIUS ? nearest : null;
     }
 
     function handleResultAction(event) {
@@ -1628,7 +1756,8 @@
     }
 
     function bindEvents() {
-        elements.brandHome.addEventListener('click', () => routeHash('#explore'));
+        elements.brandHome.addEventListener('click', () => routeOrScrollTop('#explore'));
+        elements.fullscreen.addEventListener('click', toggleFullscreen);
         elements.surprise.addEventListener('click', () => openConstellation(atlas[Math.floor(Math.random() * atlas.length)]));
         elements.headerProgress.addEventListener('click', () => routeHash('#collection/learned'));
         elements.continueExplore.addEventListener('click', () => openConstellation(nextUnlearned()));
@@ -1639,28 +1768,45 @@
 
         elements.search.addEventListener('input', () => {
             state.query = elements.search.value;
+            state.atlasPage = 0;
             renderAtlas();
         });
         elements.clearSearch.addEventListener('click', () => {
             state.query = '';
+            state.atlasPage = 0;
             elements.search.value = '';
             renderAtlas();
             elements.search.focus();
         });
         elements.filterToggle.addEventListener('click', openFilterDialog);
-        elements.filterDialog.addEventListener('close', () => elements.filterToggle.setAttribute('aria-expanded', 'false'));
+        elements.filterDialog.addEventListener('close', () => {
+            elements.filterToggle.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('dialog-open');
+        });
         elements.filterDialog.addEventListener('click', (event) => {
             const button = event.target.closest('[data-filter]');
             if (!button) return;
             state.filter = button.dataset.filter;
+            state.atlasPage = 0;
             renderAtlas();
             closeFilterDialog();
         });
         elements.resetFilter.addEventListener('click', () => {
             state.filter = 'all';
             state.query = '';
+            state.atlasPage = 0;
             elements.search.value = '';
             renderAtlas();
+        });
+        elements.atlasPreviousPage.addEventListener('click', () => {
+            state.atlasPage = Math.max(0, state.atlasPage - 1);
+            renderAtlas();
+            scrollAppToElement(elements.atlasSection);
+        });
+        elements.atlasNextPage.addEventListener('click', () => {
+            state.atlasPage += 1;
+            renderAtlas();
+            scrollAppToElement(elements.atlasSection);
         });
 
         elements.backToList.addEventListener('click', () => {
@@ -1687,10 +1833,10 @@
         elements.modeSelection.addEventListener('click', (event) => {
             const button = event.target.closest('[data-view]');
             if (!button) return;
-            if (button.dataset.view === 'quiz') routeHash('#challenge/quiz');
-            else if (button.dataset.view === 'speed') routeHash('#challenge/speed');
-            else if (button.dataset.view === 'collection') routeHash(`#collection/${state.collection}`);
-            else routeHash('#explore');
+            if (button.dataset.view === 'quiz') routeOrScrollTop('#challenge/quiz');
+            else if (button.dataset.view === 'speed') routeOrScrollTop('#challenge/speed');
+            else if (button.dataset.view === 'collection') routeOrScrollTop(`#collection/${state.collection}`);
+            else routeOrScrollTop('#explore');
         });
         elements.quizMode.addEventListener('click', () => routeHash('#challenge/quiz'));
         elements.speedMode.addEventListener('click', () => routeHash('#challenge/speed'));
@@ -1725,6 +1871,16 @@
             event.preventDefault();
             tabs[nextIndex].focus();
             routeHash(`#collection/${tabs[nextIndex].dataset.collection}`);
+        });
+        elements.collectionPreviousPage.addEventListener('click', () => {
+            state.collectionPages[state.collection] = Math.max(0, state.collectionPages[state.collection] - 1);
+            renderCollection(state.collection);
+            scrollAppToElement(elements.collectionTabs);
+        });
+        elements.collectionNextPage.addEventListener('click', () => {
+            state.collectionPages[state.collection] += 1;
+            renderCollection(state.collection);
+            scrollAppToElement(elements.collectionTabs);
         });
         elements.collectionExplore.addEventListener('click', () => routeHash('#explore'));
         elements.collectionMapNext.addEventListener('click', () => {
@@ -1763,6 +1919,8 @@
         elements.collectionMapViewport.addEventListener('pointercancel', finishMapPointer, { passive: true });
 
         window.addEventListener('hashchange', renderRoute);
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
         window.addEventListener('resize', () => {
             window.clearTimeout(state.resizeTimer);
             state.resizeTimer = window.setTimeout(() => {
@@ -1811,6 +1969,7 @@
         elements.speedQuestion.setAttribute('aria-live', 'polite');
         elements.speedQuestion.setAttribute('aria-atomic', 'true');
         bindEvents();
+        updateFullscreenButton();
         try {
             history.scrollRestoration = 'manual';
         } catch (error) {
