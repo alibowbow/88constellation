@@ -34,6 +34,15 @@
         { count: 44, rank: '밤하늘 해설가' },
         { count: 88, rank: '88 별자리 마스터' }
     ];
+    const STORY_DETAILS = {
+        Lyra: [
+            '거문고자리(Lyra)가 가리키는 악기는 한국의 거문고가 아니라 고대 그리스의 현악기 리라입니다. 고대 천문 신화에서는 헤르메스가 거북 등껍질로 이 악기를 만들었다고 전합니다. 리라가 오르페우스에게 전해진 과정은 판본마다 달라, 헤르메스가 바로 주었다는 이야기와 아폴론이 넘겨받아 연주를 가르친 뒤 주었다는 이야기가 함께 남아 있습니다. 오르페우스가 연주하면 사나운 짐승이 얌전해지고 나무와 바위까지 소리를 들으러 다가왔다고 하며, 아르고호 원정에서는 세이렌의 노래를 음악으로 눌러 동료들을 구했다고 합니다.',
+            '아내 에우리디케가 뱀에 물려 죽자 오르페우스는 리라 하나를 들고 저승으로 내려갔습니다. 그의 노래는 저승의 망령뿐 아니라 하데스와 페르세포네의 마음까지 움직였습니다. 두 신은 두 사람이 모두 지상에 나올 때까지 뒤를 돌아보지 말라는 조건으로 에우리디케를 돌려보냈습니다. 그러나 지상의 빛에 거의 닿았을 때 오르페우스가 뒤를 돌아보았고, 아직 저승의 경계를 넘지 못한 에우리디케는 다시 어둠 속으로 사라졌습니다. 그가 돌아본 이유는 불안, 그리움, 의심 등으로 다양하게 해석됩니다.',
+            '오르페우스의 최후에도 여러 판본이 있습니다. 그는 트라키아의 여인들 또는 디오니소스의 추종자들에게 죽지만, 그 까닭은 디오니소스를 소홀히 했기 때문, 비밀 의식을 보았기 때문, 여인들의 사랑을 거절했기 때문 등으로 갈립니다. 고대 천문 신화의 한 전승에서는 뮤즈 여신들이 그의 흩어진 유해를 거두고 위대한 음악가를 기억하기 위해 리라를 별들 사이에 놓으며, 아폴론과 제우스가 이를 허락합니다. 거문고자리는 오르페우스 자신이 아니라 주인이 죽은 뒤에도 그의 음악을 기억하게 하는 악기를 나타냅니다.',
+            '거문고자리에서 가장 밝은 별 베가는 한국에서 직녀성으로 친숙합니다. 은하수 건너 독수리자리의 알타이르, 곧 견우성과 떨어져 지내다가 음력 7월 7일 칠석에 오작교를 건너 만난다는 이야기입니다. 견우직녀 설화는 오르페우스 신화와 이어지는 뒷이야기가 아니라, 같은 하늘을 한국과 동아시아 문화권이 다르게 읽어 낸 독립된 전승입니다. 같은 별을 두고 그리스인은 잃어버린 사랑을 노래한 리라를, 한국인은 다시 만날 날을 기다리는 직녀성을 바라본 셈입니다.'
+        ]
+    };
+
     const STORY_WEBTOONS = {
         Lyra: {
             src: './assets/webtoons/01-lyra-webtoon.webp',
@@ -729,20 +738,55 @@
     }
 
     function storyBlock(constellation) {
-        if (!constellation.story) return '';
-        const webtoon = STORY_WEBTOONS[keyFor(constellation)];
-        if (!webtoon) return infoBlock('별에 얽힌 이야기', constellation.story);
+        const key = keyFor(constellation);
+        const detailedStory = STORY_DETAILS[key];
+        const paragraphs = Array.isArray(detailedStory) && detailedStory.length
+            ? detailedStory
+            : (constellation.story ? [constellation.story] : []);
+        if (!paragraphs.length) return '';
+
+        const headingId = `story-heading-${String(constellation.abbr || key).toLowerCase()}`;
+        const storyCopy = paragraphs
+            .filter(Boolean)
+            .map((paragraph) => `<p>${escapeHTML(paragraph)}</p>`)
+            .join('');
+        const webtoon = STORY_WEBTOONS[key];
+        const webtoonMarkup = webtoon ? `
+            <details class="story-webtoon">
+                <summary>
+                    <span class="story-webtoon-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+                    </span>
+                    <span class="story-webtoon-summary-copy">
+                        <strong>웹툰으로 보기</strong>
+                        <small>4컷 · 이미지 안에 한국어 글 포함</small>
+                    </span>
+                    <span class="story-webtoon-chevron" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg>
+                    </span>
+                </summary>
+                <div class="story-webtoon-body">
+                    <header class="story-webtoon-heading">
+                        <strong>오르페우스와 하늘의 리라</strong>
+                        <span>WEBTOON 01 / 88</span>
+                    </header>
+                    <figure>
+                        <img src="${escapeHTML(webtoon.src)}" width="${webtoon.width}" height="${webtoon.height}"
+                            loading="lazy" decoding="async" alt="${escapeHTML(webtoon.alt)}">
+                        <figcaption>오르페우스의 리라가 거문고자리가 되기까지의 이야기를 4컷으로 재구성했습니다.</figcaption>
+                    </figure>
+                </div>
+            </details>
+        ` : '';
+
         return `
-            <section class="story-webtoon" aria-labelledby="story-webtoon-heading">
-                <header class="story-webtoon-heading">
-                    <span id="story-webtoon-heading" class="info-key">별에 얽힌 이야기</span>
-                    <span>WEBTOON 01 / 88</span>
+            <section class="story-block" aria-labelledby="${headingId}">
+                <header class="story-block-heading">
+                    <span id="${headingId}" class="info-key">별에 얽힌 이야기</span>
+                    <span>MYTH &amp; LORE</span>
                 </header>
-                <figure>
-                    <img src="${escapeHTML(webtoon.src)}" width="${webtoon.width}" height="${webtoon.height}"
-                        loading="lazy" decoding="async" alt="${escapeHTML(webtoon.alt)}">
-                    <figcaption class="sr-only">${escapeHTML(constellation.story)}</figcaption>
-                </figure>
+                <div class="story-copy">${storyCopy}</div>
+                ${webtoonMarkup}
             </section>
         `;
     }
