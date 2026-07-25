@@ -56,7 +56,6 @@
             height: 1821,
             title: '오르페우스와 하늘의 리라',
             episode: 'WEBTOON 01 / 88',
-            summary: '4컷',
             caption: '오르페우스의 리라가 거문고자리가 되기까지의 이야기를 4컷으로 재구성했습니다.',
             alt: '오르페우스가 리라를 연주해 모든 생명을 매혹시키고, 리라가 별빛을 따라 하늘로 올라 베가와 함께 거문고자리가 되는 4컷 웹툰'
         },
@@ -66,7 +65,6 @@
             height: 1821,
             title: '카르키노스, 별이 된 게',
             episode: 'WEBTOON 02 / 88',
-            summary: '4컷',
             caption: '히드라 전투에 뛰어든 카르키노스가 게자리로 남기까지의 이야기를 4컷으로 재구성했습니다.',
             alt: '헤라클레스와 히드라의 전투에 뛰어든 카르키노스가 패배한 뒤 헤라에 의해 게자리가 되는 4컷 웹툰'
         }
@@ -779,7 +777,6 @@
                     </span>
                     <span class="story-webtoon-summary-copy">
                         <strong>웹툰으로 보기</strong>
-                        <small>${escapeHTML(webtoon.summary || '이미지 안에 한국어 글 포함')}</small>
                     </span>
                     <span class="story-webtoon-chevron" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg>
