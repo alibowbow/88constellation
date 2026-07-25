@@ -560,13 +560,45 @@
   }
 
   .welcome-copy h1 {
+    --welcome-title-shift: 18px;
     max-width: 620px;
     margin-top: 10px;
-    font-size: clamp(2rem, 9vw, 4.7rem);
+    color: #143642;
+    font-size: clamp(1.85rem, 8.25vw, 4.35rem);
     font-weight: 950;
     letter-spacing: -0.075em;
     line-height: 0.97;
+    text-rendering: geometricPrecision;
     text-wrap: balance;
+  }
+
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .welcome-copy h1 {
+      color: transparent;
+      background-image: linear-gradient(
+        105deg,
+        #123d4b 0%,
+        #117487 23%,
+        #7251a0 43%,
+        #c44f47 61%,
+        #9e6906 79%,
+        #123d4b 100%
+      );
+      background-position: 0% 50%;
+      background-size: 170% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .welcome-copy h1 {
+      animation: welcome-title-scroll 1s linear both;
+      animation-timeline: scroll(nearest block);
+      animation-range: 0 720px;
+      will-change: transform, background-position;
+    }
   }
 
   .welcome-copy > p:not(.eyebrow) {
@@ -2835,7 +2867,7 @@
     }
 
     .welcome-copy h1 {
-      font-size: clamp(4rem, 6vw, 5rem);
+      font-size: clamp(3.65rem, 5.4vw, 4.6rem);
     }
 
     .featured-sky {
@@ -2962,8 +2994,9 @@
     }
 
     .welcome-copy h1 {
+      --welcome-title-shift: 6px;
       margin-top: 7px;
-      font-size: clamp(1.9rem, 10vw, 2.55rem);
+      font-size: clamp(1.68rem, 8.8vw, 2.3rem);
     }
 
     .welcome-copy > p:not(.eyebrow) {
@@ -3224,6 +3257,17 @@
 }
 
 @layer motion {
+  @keyframes welcome-title-scroll {
+    from {
+      transform: translate3d(0, 0, 0);
+      background-position: 0% 50%;
+    }
+    to {
+      transform: translate3d(var(--welcome-title-shift), 0, 0);
+      background-position: 100% 50%;
+    }
+  }
+
   @keyframes wrong-answer-shake {
     0%,
     100% {
@@ -3259,6 +3303,12 @@
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
+    }
+
+    .welcome-copy h1 {
+      animation: none !important;
+      transform: none !important;
+      background-position: 50% 50%;
     }
   }
 }
