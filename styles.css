@@ -1537,7 +1537,7 @@
   }
 
   .story-copy {
-    margin-top: 11px;
+    margin: 0;
   }
 
   .story-copy p {
@@ -1552,15 +1552,21 @@
     margin-top: 13px;
   }
 
-  .story-webtoon {
-    margin-top: 18px;
+  .story-webtoon,
+  .story-text {
+    margin-top: 14px;
     overflow: hidden;
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-md);
     background: rgba(5, 20, 32, 0.72);
   }
 
-  .story-webtoon summary {
+  .story-webtoon + .story-text {
+    margin-top: 10px;
+  }
+
+  .story-webtoon summary,
+  .story-text summary {
     display: grid;
     grid-template-columns: 38px minmax(0, 1fr) 28px;
     min-height: 64px;
@@ -1571,19 +1577,22 @@
     cursor: pointer;
     list-style: none;
     touch-action: manipulation;
+    transition: background-color 180ms ease;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .story-webtoon summary::-webkit-details-marker {
+  .story-webtoon summary::-webkit-details-marker,
+  .story-text summary::-webkit-details-marker {
     display: none;
   }
 
-  .story-webtoon summary:focus-visible {
+  .story-webtoon summary:focus-visible,
+  .story-text summary:focus-visible {
     outline: 2px solid var(--cyan);
     outline-offset: -3px;
   }
 
-  .story-webtoon-icon {
+  .story-disclosure-icon {
     display: grid;
     width: 38px;
     height: 38px;
@@ -1594,8 +1603,14 @@
     background: rgba(112, 214, 255, 0.08);
   }
 
-  .story-webtoon-icon svg,
-  .story-webtoon-chevron svg {
+  .story-text-icon {
+    border-color: rgba(255, 202, 98, 0.34);
+    color: var(--gold);
+    background: rgba(255, 202, 98, 0.08);
+  }
+
+  .story-disclosure-icon svg,
+  .story-disclosure-chevron svg {
     width: 20px;
     height: 20px;
     fill: none;
@@ -1605,27 +1620,18 @@
     stroke-linejoin: round;
   }
 
-  .story-webtoon-summary-copy {
+  .story-disclosure-copy {
     display: grid;
     min-width: 0;
     gap: 3px;
   }
 
-  .story-webtoon-summary-copy strong {
+  .story-disclosure-copy strong {
     font-size: 0.84rem;
     font-weight: 850;
   }
 
-  .story-webtoon-summary-copy small {
-    overflow: hidden;
-    color: var(--ink-muted);
-    font-size: 0.65rem;
-    font-weight: 650;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .story-webtoon-chevron {
+  .story-disclosure-chevron {
     display: grid;
     width: 28px;
     height: 28px;
@@ -1634,11 +1640,13 @@
     transition: transform 180ms ease;
   }
 
-  .story-webtoon[open] summary {
+  .story-webtoon[open] summary,
+  .story-text[open] summary {
     border-bottom: 1px solid var(--line);
   }
 
-  .story-webtoon[open] .story-webtoon-chevron {
+  .story-webtoon[open] .story-disclosure-chevron,
+  .story-text[open] .story-disclosure-chevron {
     transform: rotate(180deg);
   }
 
@@ -1670,16 +1678,16 @@
     height: auto;
   }
 
-  .story-webtoon figcaption {
-    padding: 10px 12px;
-    color: var(--ink-muted);
-    font-size: 0.68rem;
-    line-height: 1.55;
-    word-break: keep-all;
+  .story-text-body {
+    padding: 14px 14px 16px;
+    background:
+      linear-gradient(135deg, rgba(255, 202, 98, 0.035), transparent 48%),
+      rgba(7, 24, 37, 0.54);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .story-webtoon summary:hover {
+    .story-webtoon summary:hover,
+    .story-text summary:hover {
       background: rgba(112, 214, 255, 0.06);
     }
   }
