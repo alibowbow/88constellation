@@ -908,56 +908,34 @@
             .join('');
         const webtoon = STORY_WEBTOONS[key];
         const webtoonMarkup = webtoon ? `
-            <details class="story-webtoon">
-                <summary>
-                    <span class="story-disclosure-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
-                    </span>
-                    <span class="story-disclosure-copy">
-                        <strong>웹툰으로 보기</strong>
-                    </span>
-                    <span class="story-disclosure-chevron" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg>
-                    </span>
-                </summary>
-                <div class="story-webtoon-body">
-                    <header class="story-webtoon-heading">
-                        <strong>${escapeHTML(webtoon.title || '별자리 웹툰')}</strong>
-                        <span>${escapeHTML(webtoon.episode || 'WEBTOON')}</span>
-                    </header>
-                    <figure>
-                        <img src="${escapeHTML(webtoon.src)}" width="${webtoon.width}" height="${webtoon.height}"
-                            loading="lazy" decoding="async" alt="${escapeHTML(webtoon.alt)}">
-                    </figure>
-                </div>
-            </details>
+            <div class="story-webtoon">
+                <header class="story-webtoon-heading">
+                    <strong>${escapeHTML(webtoon.title || '별자리 웹툰')}</strong>
+                    <span>${escapeHTML(webtoon.episode || 'WEBTOON')}</span>
+                </header>
+                <figure>
+                    <img src="${escapeHTML(webtoon.src)}" width="${webtoon.width}" height="${webtoon.height}"
+                        loading="lazy" decoding="async" alt="${escapeHTML(webtoon.alt)}">
+                </figure>
+            </div>
         ` : '';
-        const storyTextMarkup = `
-            <details class="story-text">
-                <summary>
-                    <span class="story-disclosure-icon story-text-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M5 4.5h10a3 3 0 0 1 3 3v12H8a3 3 0 0 1-3-3v-12Z"/><path d="M8 8h6M8 11.5h6M8 15h4"/></svg>
-                    </span>
-                    <span class="story-disclosure-copy">
-                        <strong>이야기 글로 읽기</strong>
-                    </span>
-                    <span class="story-disclosure-chevron" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg>
-                    </span>
-                </summary>
-                <div class="story-copy story-text-body">${storyCopy}</div>
-            </details>
-        `;
 
         return `
-            <section class="story-block" aria-labelledby="${headingId}">
-                <header class="story-block-heading">
+            <details class="story-block" aria-labelledby="${headingId}">
+                <summary class="story-block-heading">
                     <span id="${headingId}" class="info-key">별에 얽힌 이야기</span>
-                    <span>MYTH &amp; LORE</span>
-                </header>
-                ${webtoonMarkup}
-                ${storyTextMarkup}
-            </section>
+                    <span class="story-block-heading-meta">
+                        <span>MYTH &amp; LORE</span>
+                        <svg class="story-block-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="m8 10 4 4 4-4"/>
+                        </svg>
+                    </span>
+                </summary>
+                <div class="story-block-body">
+                    ${webtoonMarkup}
+                    <div class="story-copy">${storyCopy}</div>
+                </div>
+            </details>
         `;
     }
 
