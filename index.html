@@ -10,9 +10,9 @@
     <link rel="preconnect" href="https://fastly.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" crossorigin href="https://fastly.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendard-dynamic-subset.min.css" />
+    <link rel="stylesheet" crossorigin href="https://fastly.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Gowun+Batang:wght@400;700&display=swap">
-    <link rel="stylesheet" href="./styles.css?v=8">
+    <link rel="stylesheet" href="./styles.css?v=9">
 </head>
 <body>
     <div class="sky" aria-hidden="true">
@@ -51,8 +51,11 @@
                 <section id="welcome-card" class="welcome-card">
                     <div class="welcome-copy">
                         <p class="eyebrow">88 CONSTELLATION CHALLENGE</p>
-                        <h1 id="explore-heading">배우고, 맞히고,<br>별지도를 완성하세요</h1>
-                        <p id="welcome-message">88개의 별자리를 실제 별의 배치로 익히며 나의 별지도를 완성해 보세요.</p>
+                        <h1 id="explore-heading">
+                            <span class="welcome-title-line">88개의 별자리,</span>
+                            <span class="welcome-title-line">하나의 밤하늘</span>
+                        </h1>
+                        <p id="welcome-message">별의 모양과 이야기를 따라 나만의 별지도를 채워 보세요.</p>
                         <div class="welcome-actions">
                             <button id="continue-explore-button" class="primary-button" type="button">
                                 <span id="continue-label">첫 별자리 학습하기</span>
@@ -560,6 +563,6 @@
         });
 
     </script>
-    <script src="./app.js?v=11"></script>
+    <script src="./app.js?v=12"></script>
 </body>
 </html>

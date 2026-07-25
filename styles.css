@@ -451,6 +451,8 @@
     scrollbar-width: thin;
     touch-action: pan-y pinch-zoom;
     -webkit-overflow-scrolling: touch;
+    scroll-timeline-name: --app-scroll;
+    scroll-timeline-axis: block;
   }
 
   .dialog-open .app-shell {
@@ -560,32 +562,45 @@
   }
 
   .welcome-copy h1 {
-    --welcome-title-shift: 18px;
     max-width: 620px;
     margin-top: 10px;
     color: #143642;
-    font-size: clamp(1.85rem, 8.25vw, 4.35rem);
-    font-weight: 950;
-    letter-spacing: -0.075em;
-    line-height: 0.97;
+    font-size: clamp(1.78rem, 7.2vw, 4rem);
+    font-weight: 850;
+    letter-spacing: 0.006em;
+    line-height: 1.1;
     text-rendering: geometricPrecision;
     text-wrap: balance;
   }
 
+  .welcome-title-line {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    animation:
+      welcome-title-enter 900ms cubic-bezier(0.22, 0.7, 0.22, 1) both,
+      welcome-title-ambient 16s ease-in-out -2s infinite alternate;
+  }
+
+  .welcome-title-line + .welcome-title-line {
+    margin-top: 0.04em;
+    animation-delay: 120ms, -10s;
+  }
+
   @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-    .welcome-copy h1 {
+    .welcome-title-line {
       color: transparent;
       background-image: linear-gradient(
-        105deg,
-        #123d4b 0%,
-        #117487 23%,
-        #7251a0 43%,
-        #c44f47 61%,
-        #9e6906 79%,
-        #123d4b 100%
+        108deg,
+        #173f4b 0%,
+        #14758a 26%,
+        #6e5a9b 48%,
+        #b15f5f 68%,
+        #9a710f 84%,
+        #173f4b 100%
       );
-      background-position: 0% 50%;
-      background-size: 170% 100%;
+      background-position: 12% 50%;
+      background-size: 220% 100%;
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -594,10 +609,10 @@
 
   @supports (animation-timeline: scroll()) {
     .welcome-copy h1 {
-      animation: welcome-title-scroll 1s linear both;
-      animation-timeline: scroll(nearest block);
-      animation-range: 0 720px;
-      will-change: transform, background-position;
+      animation: welcome-title-scroll 1s ease-out both;
+      animation-timeline: --app-scroll;
+      animation-range: 0 300px;
+      will-change: transform;
     }
   }
 
@@ -2714,6 +2729,10 @@
       padding: 30px;
     }
 
+    .welcome-copy h1 {
+      font-size: clamp(2rem, 4.6vw, 2.8rem);
+    }
+
     .featured-sky {
       min-height: 240px;
     }
@@ -2867,7 +2886,7 @@
     }
 
     .welcome-copy h1 {
-      font-size: clamp(3.65rem, 5.4vw, 4.6rem);
+      font-size: clamp(2.8rem, 4.2vw, 4rem);
     }
 
     .featured-sky {
@@ -2994,9 +3013,8 @@
     }
 
     .welcome-copy h1 {
-      --welcome-title-shift: 6px;
       margin-top: 7px;
-      font-size: clamp(1.68rem, 8.8vw, 2.3rem);
+      font-size: clamp(1.68rem, 8.4vw, 2.2rem);
     }
 
     .welcome-copy > p:not(.eyebrow) {
@@ -3257,14 +3275,38 @@
 }
 
 @layer motion {
+  @keyframes welcome-title-enter {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 8px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes welcome-title-ambient {
+    0% {
+      background-position: 12% 50%;
+      filter: drop-shadow(0 2px 6px rgba(20, 117, 138, 0.04));
+    }
+    50% {
+      background-position: 58% 50%;
+      filter: drop-shadow(0 3px 9px rgba(110, 90, 155, 0.1));
+    }
+    100% {
+      background-position: 92% 50%;
+      filter: drop-shadow(0 2px 7px rgba(177, 95, 95, 0.06));
+    }
+  }
+
   @keyframes welcome-title-scroll {
     from {
       transform: translate3d(0, 0, 0);
-      background-position: 0% 50%;
     }
     to {
-      transform: translate3d(var(--welcome-title-shift), 0, 0);
-      background-position: 100% 50%;
+      transform: translate3d(0, -5px, 0);
     }
   }
 
@@ -3308,6 +3350,13 @@
     .welcome-copy h1 {
       animation: none !important;
       transform: none !important;
+    }
+
+    .welcome-title-line {
+      opacity: 1;
+      animation: none !important;
+      filter: none;
+      transform: none;
       background-position: 50% 50%;
     }
   }

@@ -606,8 +606,8 @@
             ? (learnedCount === total ? '완성한 별지도 보기' : `다음 학습 · ${targetName}`)
             : '첫 별자리 학습하기';
         elements.welcomeMessage.textContent = learnedCount
-            ? `${total}개 중 ${learnedCount}개를 등록했어요. 학습·퀴즈·타임어택으로 별지도를 이어서 완성하세요.`
-            : `${total}개의 별자리를 실제 별의 배치로 익히며 나의 별지도를 완성해 보세요.`;
+            ? `${total}개 중 ${learnedCount}개의 별자리가 빛나고 있어요. 다음 별을 이어 보세요.`
+            : '별의 모양과 이야기를 따라 나만의 별지도를 채워 보세요.';
     }
 
     function showToast(message) {
