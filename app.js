@@ -3,7 +3,6 @@
     'use strict';
 
     const STORAGE_KEYS = {
-        bookmarks: 'bookmarkedConstellations',
         learned: 'learnedConstellations',
         magnitude: 'skyLimitMag',
         mistakes: 'quizMistakes'
@@ -391,7 +390,6 @@
         atlasEmpty: byId('atlas-empty-state'),
         backToList: byId('back-to-list-button'),
         detailPosition: byId('detail-position'),
-        bookmark: byId('bookmark-button'),
         constellationName: byId('constellation-name'),
         description: byId('description'),
         imageContainer: byId('image-container'),
@@ -427,7 +425,6 @@
         speedResults: byId('time-attack-results'),
         collectionLearned: byId('collection-learned-count'),
         collectionProgress: byId('collection-progress-fill'),
-        collectionBookmarks: byId('collection-bookmark-count'),
         collectionReview: byId('collection-review-count'),
         collectionTabs: byId('collection-tabs'),
         collectionPagination: byId('collection-pagination'),
@@ -555,12 +552,10 @@
         collection: 'learned',
         collectionPages: {
             learned: 0,
-            bookmarked: 0,
             review: 0
         },
         current: null,
         featured: atlas[todayIndex(atlas.length)],
-        bookmarks: readSet(STORAGE_KEYS.bookmarks, validStorageKeys),
         learned: readSet(STORAGE_KEYS.learned, validStorageKeys),
         mistakes: readSet(STORAGE_KEYS.mistakes, validStorageKeys),
         magnitude: readMagnitude(),
@@ -623,7 +618,6 @@
         const key = keyFor(constellation);
         const statuses = [];
         if (state.learned.has(key)) statuses.push('나의 별자리에 등록');
-        if (state.bookmarks.has(key)) statuses.push('북마크');
         if (state.mistakes.has(key)) statuses.push('복습 필요');
         return statuses.join(', ');
     }
@@ -633,11 +627,9 @@
         const names = parseName(constellation);
         const key = keyFor(constellation);
         const learned = state.learned.has(key);
-        const bookmarked = state.bookmarks.has(key);
         const review = state.mistakes.has(key);
         const stateClasses = [
             learned ? 'is-learned' : '',
-            bookmarked ? 'is-bookmarked' : '',
             review ? 'needs-review' : ''
         ].filter(Boolean).join(' ');
         const status = statusText(constellation);
@@ -658,7 +650,7 @@
                     ${miniSkySVG(constellation)}
                     <span class="card-top">
                         <span class="card-index">${String(index + 1).padStart(2, '0')}</span>
-                        <span class="card-status" aria-hidden="true">${learned ? '✓' : ''}${bookmarked ? ' ★' : ''}${review ? ' ↻' : ''}</span>
+                        <span class="card-status" aria-hidden="true">${learned ? '✓' : ''}${review ? ' ↻' : ''}</span>
                     </span>
                 </span>
                 <span class="card-name">${escapeHTML(names.korean)}</span>
@@ -785,7 +777,6 @@
         elements.headerProgressRing.style.setProperty('--progress-angle', `${percentage * 3.6}deg`);
         elements.collectionLearned.textContent = String(learnedCount);
         elements.collectionProgress.style.width = `${percentage}%`;
-        elements.collectionBookmarks.textContent = String(state.bookmarks.size);
         elements.collectionReview.textContent = String(state.mistakes.size);
 
         const target = nextUnlearned();
@@ -932,7 +923,7 @@
             return { kind: 'challenge', key: `challenge/${panel}`, panel };
         }
         if (parts[0] === 'collection') {
-            const collection = ['learned', 'bookmarked', 'review'].includes(parts[1]) ? parts[1] : state.collection;
+            const collection = parts[1] === 'review' ? 'review' : 'learned';
             return { kind: 'collection', key: `collection/${collection}`, collection };
         }
         return { kind: 'explore', key: 'explore' };
@@ -1106,21 +1097,15 @@
     function updateDetailActions(constellation) {
         const key = keyFor(constellation);
         const learned = state.learned.has(key);
-        const bookmarked = state.bookmarks.has(key);
-        elements.bookmark.classList.toggle('is-bookmarked', bookmarked);
-        elements.bookmark.setAttribute('aria-pressed', bookmarked ? 'true' : 'false');
-        elements.bookmark.querySelector('span').textContent = bookmarked ? '북마크됨' : '북마크';
-
         elements.complete.classList.toggle('is-complete', learned);
         elements.complete.setAttribute('aria-pressed', learned ? 'true' : 'false');
         elements.complete.disabled = false;
-        elements.complete.querySelector('.complete-icon').textContent = learned ? '✓' : '✦';
-        elements.complete.querySelector('.complete-label').textContent = learned
-            ? '나의 별자리에서 해제'
-            : '나의 별자리에 등록';
-        elements.complete.querySelector('small').textContent = learned
-            ? '누르면 전체 별지도에서 다시 어두워집니다'
-            : '전체 별지도에 이 별을 밝히기';
+        elements.complete.querySelector('span').textContent = learned ? '등록됨' : '나의 별자리';
+        const actionLabel = learned
+            ? `${parseName(constellation).korean}를 나의 별자리에서 해제`
+            : `${parseName(constellation).korean}를 나의 별자리에 등록`;
+        elements.complete.setAttribute('aria-label', actionLabel);
+        elements.complete.title = actionLabel;
     }
 
     function renderDetail(constellation) {
@@ -1372,17 +1357,6 @@
         showToast(wasLearned
             ? `${parseName(state.current).korean}를 나의 별자리에서 해제했어요`
             : `${parseName(state.current).korean}를 나의 별자리에 등록했어요`);
-    }
-
-    function toggleCurrentBookmark() {
-        if (!state.current) return;
-        const key = keyFor(state.current);
-        if (state.bookmarks.has(key)) state.bookmarks.delete(key);
-        else state.bookmarks.add(key);
-        writeSet(STORAGE_KEYS.bookmarks, state.bookmarks);
-        updateDetailActions(state.current);
-        updateProgress();
-        showToast(state.bookmarks.has(key) ? '북마크에 저장했어요' : '북마크에서 해제했어요');
     }
 
     function renderChallenge(panel, enteringPanel) {
@@ -1970,7 +1944,6 @@
     }
 
     function collectionItems(collection) {
-        if (collection === 'bookmarked') return atlas.filter((item) => state.bookmarks.has(keyFor(item)));
         if (collection === 'review') return atlas.filter((item) => state.mistakes.has(keyFor(item)));
         return atlas.filter((item) => state.learned.has(keyFor(item)));
     }
@@ -2004,7 +1977,6 @@
         setHidden(elements.collectionEmpty, items.length !== 0);
         const emptyCopy = {
             learned: ['아직 등록한 별자리가 없어요', '학습에서 별자리를 살펴보고 나의 별자리에 등록해 보세요.'],
-            bookmarked: ['아직 북마크한 별자리가 없어요', '다시 보고 싶은 별의 상세 화면에서 별 버튼을 눌러보세요.'],
             review: ['복습할 별자리가 없어요', '도전에서 헷갈린 별자리가 여기에 자동으로 모입니다.']
         }[collection];
         elements.collectionEmptyTitle.textContent = emptyCopy[0];
@@ -2149,7 +2121,6 @@
                 replaceRoute(state.detailReturnHash || '#explore');
             }
         });
-        elements.bookmark.addEventListener('click', toggleCurrentBookmark);
         elements.complete.addEventListener('click', toggleCurrentConstellation);
         elements.prev.addEventListener('click', () => {
             if (!state.current) return;
@@ -2275,8 +2246,7 @@
                 }
                 return;
             }
-            if (![STORAGE_KEYS.bookmarks, STORAGE_KEYS.learned, STORAGE_KEYS.mistakes].includes(event.key)) return;
-            state.bookmarks = readSet(STORAGE_KEYS.bookmarks, validStorageKeys);
+            if (![STORAGE_KEYS.learned, STORAGE_KEYS.mistakes].includes(event.key)) return;
             state.learned = readSet(STORAGE_KEYS.learned, validStorageKeys);
             state.mistakes = readSet(STORAGE_KEYS.mistakes, validStorageKeys);
             updateProgress();
