@@ -98,6 +98,15 @@
     margin: 0;
   }
 
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+
   img,
   svg,
   canvas {
@@ -146,6 +155,10 @@
     background: var(--night-900);
     font-family: var(--font-sans);
     line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
 
   @supports (height: 100dvh) {
