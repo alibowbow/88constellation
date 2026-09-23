@@ -20,11 +20,19 @@
     --coral: #ff8b71;
     --green: #91dda9;
     --purple: #c0a9ff;
-    --line: rgba(255, 249, 238, 0.16);
-    --line-strong: rgba(255, 249, 238, 0.3);
-    --shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
-    --shadow-small: 0 10px 24px rgba(0, 0, 0, 0.2);
-    --offset-shadow: 4px 4px 0 #04111b;
+    --line: rgba(255, 249, 238, 0.1);
+    --line-strong: rgba(255, 249, 238, 0.18);
+    --shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.55);
+    --shadow-small: 0 12px 28px -12px rgba(0, 0, 0, 0.5);
+    /* 밤의 천문대 — 위에서 빛을 받는 유리 면 + 별빛 금색(유일한 따뜻한 강조) */
+    --glass: linear-gradient(180deg, rgba(20, 45, 66, 0.78), rgba(11, 30, 46, 0.86));
+    --glass-raised: linear-gradient(180deg, rgba(24, 52, 75, 0.92), rgba(12, 32, 49, 0.95));
+    --edge-light: inset 0 1px 0 rgba(255, 249, 238, 0.09);
+    --gold-grad: linear-gradient(180deg, #ffe39a 0%, #ffd166 55%, #f2b843 100%);
+    --gold-glow: 0 10px 28px -10px rgba(255, 209, 102, 0.6);
+    --gold-tint: rgba(255, 209, 102, 0.12);
+    --gold-edge: rgba(255, 209, 102, 0.32);
+    --offset-shadow: var(--gold-glow);
     --radius-sm: 10px;
     --radius-md: 16px;
     --radius-lg: 24px;
@@ -235,14 +243,15 @@
   .primary-button,
   .secondary-button {
     min-height: 48px;
-    border: 2px solid var(--ink);
-    border-radius: var(--radius-sm);
-    font-weight: 800;
-    letter-spacing: -0.015em;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-weight: 760;
+    letter-spacing: -0.01em;
     transition:
-      transform 160ms ease,
-      box-shadow 160ms ease,
-      background-color 160ms ease;
+      transform 180ms ease,
+      box-shadow 220ms ease,
+      background-color 180ms ease,
+      border-color 180ms ease;
   }
 
   .primary-button {
@@ -250,10 +259,10 @@
     align-items: center;
     justify-content: center;
     gap: 0.55rem;
-    padding: 0.75rem 1.1rem;
-    color: var(--night-950);
-    background: var(--gold);
-    box-shadow: var(--offset-shadow);
+    padding: 0.75rem 1.35rem;
+    color: #241a02;
+    background: var(--gold-grad);
+    box-shadow: var(--gold-glow), inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 
   .primary-button svg {
@@ -265,23 +274,28 @@
   }
 
   .secondary-button {
-    padding: 0.7rem 1rem;
+    padding: 0.7rem 1.2rem;
+    border-color: var(--line-strong);
     color: var(--ink);
-    background: var(--night-800);
+    background: rgba(255, 249, 238, 0.05);
   }
 
   @media (hover: hover) {
-    .primary-button:hover,
+    .primary-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 34px -10px rgba(255, 209, 102, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
     .secondary-button:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0 var(--night-950);
+      transform: translateY(-1px);
+      border-color: rgba(255, 249, 238, 0.32);
+      background: rgba(255, 249, 238, 0.09);
     }
   }
 
   .primary-button:active,
   .secondary-button:active {
-    transform: translate(2px, 2px);
-    box-shadow: none;
+    transform: translateY(0) scale(0.98);
   }
 }
 
@@ -495,10 +509,10 @@
     min-height: 68px;
     margin: 0 auto;
     padding: 6px;
-    border: 1px solid rgba(255, 249, 238, 0.22);
-    border-radius: 20px;
-    background: rgba(10, 29, 44, 0.96);
-    box-shadow: var(--shadow);
+    border: 1px solid var(--line-strong);
+    border-radius: 22px;
+    background: rgba(8, 24, 38, 0.9);
+    box-shadow: var(--shadow), var(--edge-light);
     backdrop-filter: blur(18px);
   }
 
@@ -529,9 +543,14 @@
     stroke-width: 1.8;
   }
 
+  .bottom-nav-button {
+    transition: color 180ms ease, background-color 180ms ease;
+  }
+
   .bottom-nav-button.selected {
-    color: var(--night-950);
-    background: var(--paper);
+    color: var(--gold);
+    background: var(--gold-tint);
+    box-shadow: inset 0 0 0 1px var(--gold-edge);
   }
 
   .detail-open .bottom-nav {
@@ -547,21 +566,26 @@
     gap: 20px;
     overflow: hidden;
     padding: 24px;
-    border: 2px solid var(--ink);
+    border: 1px solid var(--line);
     border-radius: var(--radius-xl);
-    color: var(--paper-ink);
-    background: var(--paper);
-    box-shadow: 7px 7px 0 var(--night-950);
+    color: var(--ink);
+    background:
+      radial-gradient(120% 90% at 0% 0%, rgba(104, 217, 232, 0.12), transparent 55%),
+      radial-gradient(90% 80% at 100% 100%, rgba(192, 169, 255, 0.08), transparent 60%),
+      var(--glass-raised);
+    box-shadow: var(--shadow), var(--edge-light);
   }
 
+  /* 우상단 별빛 광륜 — 의도된 따뜻한 빛 한 점 */
   .welcome-card::before {
     position: absolute;
-    width: 92px;
-    height: 92px;
-    top: -34px;
-    right: 34%;
-    border: 18px solid rgba(255, 139, 113, 0.22);
+    width: 300px;
+    height: 300px;
+    top: -150px;
+    right: -90px;
     border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 209, 102, 0.16) 0%, rgba(255, 209, 102, 0.05) 42%, transparent 68%);
+    pointer-events: none;
     content: "";
   }
 
@@ -571,16 +595,16 @@
   }
 
   .welcome-copy .eyebrow {
-    color: #126176;
+    color: var(--cyan);
   }
 
   .welcome-copy h1 {
     max-width: 620px;
     margin-top: 10px;
-    color: #143642;
+    color: var(--ink);
     font-size: clamp(1.78rem, 7.2vw, 4rem);
-    font-weight: 850;
-    letter-spacing: 0.006em;
+    font-weight: 820;
+    letter-spacing: -0.02em;
     line-height: 1.1;
     text-rendering: geometricPrecision;
     text-wrap: balance;
@@ -605,12 +629,13 @@
       color: transparent;
       background-image: linear-gradient(
         108deg,
-        #173f4b 0%,
-        #14758a 26%,
-        #6e5a9b 48%,
-        #b15f5f 68%,
-        #9a710f 84%,
-        #173f4b 100%
+        #fff9ee 0%,
+        #fff9ee 34%,
+        #ffe7a8 45%,
+        #ffd166 52%,
+        #ffe7a8 59%,
+        #fff9ee 70%,
+        #fff9ee 100%
       );
       background-position: 12% 50%;
       background-size: 220% 100%;
@@ -632,7 +657,7 @@
   .welcome-copy > p:not(.eyebrow) {
     max-width: 500px;
     margin-top: 16px;
-    color: #405057;
+    color: var(--ink-soft);
     font-size: 0.92rem;
     line-height: 1.65;
   }
@@ -644,15 +669,8 @@
     margin-top: 20px;
   }
 
-  .welcome-actions .primary-button {
-    border-color: var(--paper-ink);
-    background: var(--gold);
-  }
-
   .welcome-actions .secondary-button {
-    border-color: var(--paper-ink);
-    color: var(--paper-ink);
-    background: transparent;
+    background: rgba(255, 249, 238, 0.04);
   }
 
   .featured-sky {
@@ -660,10 +678,11 @@
     display: grid;
     min-height: 158px;
     overflow: hidden;
-    border: 2px solid var(--paper-ink);
+    border: 1px solid var(--line-strong);
     border-radius: 22px;
     color: var(--ink);
-    background: var(--night-800);
+    background: radial-gradient(90% 80% at 50% 30%, rgba(104, 217, 232, 0.1), transparent 70%), #061420;
+    box-shadow: var(--edge-light);
     text-align: left;
   }
 
@@ -678,8 +697,9 @@
 
   .featured-map {
     position: absolute;
-    inset: -4px 0 36px;
+    inset: 8px 0 76px;
     display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     place-items: center;
     color: var(--cyan);
   }
@@ -948,10 +968,11 @@
     flex-direction: column;
     padding: 8px 10px 12px;
     overflow: hidden;
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--line);
     border-radius: var(--radius-md);
     color: var(--ink);
-    background: var(--night-800);
+    background: var(--glass);
+    box-shadow: var(--edge-light);
     text-align: left;
     transition:
       transform 160ms ease,
@@ -984,9 +1005,9 @@
     .constellation-list-item:hover {
       z-index: 1;
       transform: translateY(-4px);
-      border-color: var(--cyan);
-      background: var(--night-750);
-      box-shadow: var(--shadow-small);
+      border-color: rgba(104, 217, 232, 0.45);
+      background: var(--glass-raised);
+      box-shadow: var(--shadow-small), 0 0 24px -8px rgba(104, 217, 232, 0.35), var(--edge-light);
     }
   }
 
@@ -997,6 +1018,8 @@
   .card-map {
     position: relative;
     display: grid;
+    /* 행을 컨테이너 높이로 고정 — 미니 성도가 내용 크기로 늘어나 이름을 덮지 않게 */
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     width: 100%;
     height: 116px;
     place-items: center;
@@ -1015,6 +1038,8 @@
   .card-map .mini-sky {
     position: relative;
     z-index: 1;
+    width: 100%;
+    height: 100%;
   }
 
   .card-top {
@@ -1158,11 +1183,12 @@
     margin: auto;
     padding: 12px 16px;
     transform: translateY(20px);
-    border: 2px solid var(--night-950);
-    border-radius: 12px;
-    color: var(--paper-ink);
-    background: var(--paper);
-    box-shadow: 4px 4px 0 var(--night-950);
+    border: 1px solid var(--gold-edge);
+    border-radius: 999px;
+    color: var(--ink);
+    background: rgba(10, 29, 44, 0.94);
+    box-shadow: var(--shadow), var(--edge-light);
+    backdrop-filter: blur(12px);
     font-size: 0.82rem;
     font-weight: 800;
     text-align: center;
@@ -1184,7 +1210,7 @@
     margin: auto;
     padding: 0;
     overflow: hidden auto;
-    border: 2px solid var(--ink);
+    border: 1px solid var(--line-strong);
     border-radius: var(--radius-xl);
     color: var(--ink);
     background: var(--night-800);
@@ -1351,10 +1377,10 @@
 
   .sky-block {
     overflow: hidden;
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
-    background: #030d15;
-    box-shadow: var(--shadow-small);
+    background: radial-gradient(100% 70% at 50% 35%, rgba(104, 217, 232, 0.07), transparent 70%), #030d15;
+    box-shadow: var(--shadow), var(--edge-light);
   }
 
   .sky-chart-wrap {
@@ -1371,11 +1397,9 @@
   .sky-chart-wrap::before {
     position: absolute;
     z-index: 2;
-    inset: 12px;
-    border: 1px solid rgba(104, 217, 232, 0.16);
-    border-radius: calc(var(--radius-lg) - 8px);
+    inset: 0;
     pointer-events: none;
-    content: "";
+    content: none; /* 내부 이중 액자 제거 — 성도가 바깥 프레임 하나로 숨쉬게 */
   }
 
   .sky-controls {
@@ -1386,7 +1410,7 @@
     min-height: 60px;
     padding: 10px 14px;
     border-top: 1px solid var(--line);
-    background: var(--night-800);
+    background: rgba(8, 24, 38, 0.72);
   }
 
   .sky-mag-label,
@@ -1748,22 +1772,30 @@
     min-height: 150px;
     padding: 18px;
     overflow: hidden;
-    border: 2px solid var(--ink);
+    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
-    color: var(--paper-ink);
+    color: var(--ink);
     text-align: left;
-    box-shadow: 5px 5px 0 var(--night-950);
+    background: var(--glass);
+    box-shadow: var(--shadow-small), var(--edge-light);
     transition:
-      transform 160ms ease,
-      box-shadow 160ms ease;
+      transform 200ms ease,
+      box-shadow 220ms ease,
+      border-color 200ms ease;
   }
 
   .challenge-card.quiz-card {
-    background: var(--cyan);
+    --card-accent: var(--cyan);
+    background:
+      radial-gradient(120% 130% at 0% 0%, rgba(104, 217, 232, 0.2), transparent 58%),
+      var(--glass);
   }
 
   .challenge-card.speed-card {
-    background: var(--coral);
+    --card-accent: var(--coral);
+    background:
+      radial-gradient(120% 130% at 0% 0%, rgba(255, 139, 113, 0.2), transparent 58%),
+      var(--glass);
   }
 
   .challenge-card-icon {
@@ -1771,8 +1803,10 @@
     width: 64px;
     height: 64px;
     place-items: center;
-    border: 2px solid currentColor;
+    border: 1px solid color-mix(in srgb, var(--card-accent, var(--cyan)) 45%, transparent);
     border-radius: 50%;
+    color: var(--card-accent, var(--cyan));
+    background: color-mix(in srgb, var(--card-accent, var(--cyan)) 10%, transparent);
   }
 
   .challenge-card-icon svg {
@@ -1792,6 +1826,7 @@
   }
 
   .challenge-card-copy small {
+    color: var(--card-accent, var(--cyan));
     font-family: var(--font-display);
     font-size: 0.57rem;
     font-weight: 700;
@@ -1813,6 +1848,7 @@
   }
 
   .card-arrow {
+    color: var(--card-accent, var(--ink-muted));
     font-family: var(--font-display);
     font-size: 1.8rem;
     font-weight: 500;
@@ -1820,8 +1856,9 @@
 
   @media (hover: hover) {
     .challenge-card:hover {
-      transform: translate(-3px, -3px);
-      box-shadow: 8px 8px 0 var(--night-950);
+      transform: translateY(-3px);
+      border-color: color-mix(in srgb, var(--card-accent, var(--cyan)) 45%, transparent);
+      box-shadow: var(--shadow), var(--edge-light);
     }
   }
 
@@ -1902,16 +1939,18 @@
     align-content: center;
     margin-top: 16px;
     padding: 28px 22px;
-    border: 2px solid var(--ink);
+    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
-    color: var(--paper-ink);
-    background: var(--paper);
+    color: var(--ink);
+    background:
+      radial-gradient(90% 80% at 50% 0%, rgba(104, 217, 232, 0.12), transparent 65%),
+      var(--glass-raised);
     text-align: center;
-    box-shadow: 5px 5px 0 var(--night-950);
+    box-shadow: var(--shadow), var(--edge-light);
   }
 
   .question-kicker {
-    color: #126176;
+    color: var(--cyan);
     font-family: var(--font-display);
     font-size: 0.63rem;
     font-weight: 800;
@@ -1931,7 +1970,7 @@
   .question-clue {
     max-width: 610px;
     margin-top: 10px;
-    color: #57656a;
+    color: var(--ink-soft);
     font-size: 0.8rem;
     line-height: 1.65;
     word-break: keep-all;
@@ -1955,10 +1994,20 @@
     flex-direction: column;
     padding: 10px;
     border: 1px solid var(--line-strong);
-    border-radius: 14px;
+    border-radius: 16px;
     color: var(--ink);
-    background: var(--night-800);
+    background: var(--glass);
+    box-shadow: var(--edge-light);
     text-align: center;
+    transition: border-color 180ms ease, transform 180ms ease, background-color 180ms ease;
+  }
+
+  @media (hover: hover) {
+    .option-button:not(:disabled):hover,
+    .time-attack-button:not(:disabled):hover {
+      transform: translateY(-1px);
+      border-color: rgba(104, 217, 232, 0.5);
+    }
   }
 
   .option-button strong {
@@ -2018,16 +2067,18 @@
   .results-card {
     margin-top: 16px;
     padding: 28px 20px;
-    border: 2px solid var(--ink);
+    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
-    color: var(--paper-ink);
-    background: var(--paper);
-    box-shadow: 6px 6px 0 var(--night-950);
+    color: var(--ink);
+    background:
+      radial-gradient(90% 80% at 50% 0%, rgba(255, 209, 102, 0.14), transparent 62%),
+      var(--glass-raised);
+    box-shadow: var(--shadow), var(--edge-light);
     text-align: center;
   }
 
   .result-kicker {
-    color: #126176;
+    color: var(--gold);
     font-family: var(--font-display);
     font-size: 0.64rem;
     font-weight: 800;
@@ -2051,7 +2102,7 @@
   }
 
   .result-score strong {
-    color: #126176;
+    color: var(--gold);
     font-family: var(--font-display);
     font-size: clamp(3.5rem, 17vw, 6.5rem);
     line-height: 1;
@@ -2100,9 +2151,7 @@
   }
 
   .results-card .secondary-button {
-    border-color: var(--paper-ink);
-    color: var(--paper-ink);
-    background: transparent;
+    background: rgba(255, 249, 238, 0.04);
   }
 
   .time-attack-options {
@@ -2297,11 +2346,13 @@
     gap: 18px;
     min-height: 108px;
     padding: 16px;
-    border: 2px solid var(--ink);
+    border: 1px solid var(--gold-edge);
     border-radius: var(--radius-lg);
-    color: var(--paper-ink);
-    background: var(--gold);
-    box-shadow: 5px 5px 0 var(--night-950);
+    color: var(--ink);
+    background:
+      radial-gradient(120% 160% at 0% 0%, rgba(255, 209, 102, 0.18), transparent 60%),
+      var(--glass-raised);
+    box-shadow: var(--shadow-small), var(--edge-light);
   }
 
   .big-progress {
@@ -2311,6 +2362,7 @@
   }
 
   .big-progress strong {
+    color: var(--gold);
     font-family: var(--font-display);
     font-size: 2.4rem;
     line-height: 1;
@@ -2331,16 +2383,18 @@
     height: 8px;
     margin-top: 9px;
     overflow: hidden;
-    border: 1px solid rgba(16, 33, 42, 0.5);
+    border: 0;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.36);
+    background: rgba(255, 249, 238, 0.1);
   }
 
   .collection-progress-track > span {
     display: block;
     width: 0;
     height: 100%;
-    background: var(--paper-ink);
+    border-radius: inherit;
+    background: var(--gold-grad);
+    box-shadow: 0 0 12px rgba(255, 209, 102, 0.55);
   }
 
   .mini-stat {
@@ -2623,8 +2677,9 @@
 
   .segmented-control button.selected,
   .segmented-control button[aria-selected="true"] {
-    color: var(--night-950);
-    background: var(--paper);
+    color: var(--gold);
+    background: var(--gold-tint);
+    box-shadow: inset 0 0 0 1px var(--gold-edge);
   }
 }
 
@@ -2855,7 +2910,7 @@
     }
   }
 
-  @media (min-width: 1280px) {
+  @media (min-width: 1440px) {
     .bottom-nav {
       top: 50%;
       right: auto;
@@ -2957,11 +3012,11 @@
     }
 
     .featured-sky {
-      min-height: 116px;
+      min-height: 150px; /* 성도가 숨쉴 공간 확보 */
     }
 
     .featured-map {
-      inset: -10px 0 32px;
+      inset: 8px 0 62px; /* 캡션(≈59px) 위에서 끝나게 — 성도가 캡션을 뚫지 않음 */
     }
 
     .featured-caption {
@@ -3204,11 +3259,11 @@
   @keyframes welcome-title-ambient {
     0% {
       background-position: 12% 50%;
-      filter: drop-shadow(0 2px 6px rgba(20, 117, 138, 0.04));
+      filter: drop-shadow(0 2px 10px rgba(255, 209, 102, 0.06));
     }
     50% {
       background-position: 58% 50%;
-      filter: drop-shadow(0 3px 9px rgba(110, 90, 155, 0.1));
+      filter: drop-shadow(0 3px 14px rgba(255, 209, 102, 0.16));
     }
     100% {
       background-position: 92% 50%;
