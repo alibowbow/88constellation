@@ -1385,6 +1385,9 @@
 
   .sky-chart-wrap {
     position: relative;
+    /* 폭을 명시해야 최소 높이가 aspect-ratio 를 거쳐 폭으로 번지지 않는다(태블릿 폭에서 차트가 칸 밖으로 넘치던 문제) */
+    width: 100%;
+    min-width: 0;
     aspect-ratio: 1.06;
     min-height: 290px;
   }
@@ -1427,6 +1430,247 @@
     min-height: 44px;
     accent-color: var(--cyan);
     cursor: pointer;
+  }
+
+  /* ── 3D 깊이 보기 ── */
+  .sky-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 52px;
+    padding: 4px 10px 4px 14px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(8, 24, 38, 0.72);
+  }
+
+  .sky-head-title {
+    color: var(--cyan);
+    font-size: 0.74rem;
+    font-weight: 760;
+  }
+
+  .sky-mode {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 249, 238, 0.04);
+  }
+
+  .sky-mode-button {
+    position: relative;
+    min-height: 38px;
+    padding: 0 15px;
+    border-radius: 999px;
+    color: var(--ink-muted);
+    background: transparent;
+    font-size: 0.76rem;
+    font-weight: 760;
+    transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .sky-mode-button[aria-pressed="true"] {
+    color: var(--gold);
+    background: var(--gold-tint);
+    box-shadow: inset 0 0 0 1px var(--gold-edge);
+  }
+
+  /* 처음 보는 사람에게만 '3D 깊이'를 알리는 금색 점 */
+  .sky-mode-button.is-new::after {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.6);
+    animation: depth-new-pulse 1.8s ease-out 3;
+    content: "";
+  }
+
+  @keyframes depth-new-pulse {
+    to {
+      box-shadow: 0 0 0 9px rgba(255, 209, 102, 0);
+    }
+  }
+
+  .sky-block[data-sky-mode="3d"] .sky-chart {
+    display: none;
+  }
+
+  .sky-block[data-sky-mode="3d"] .sky-chart-wrap {
+    aspect-ratio: 0.85;
+    min-height: 340px;
+    max-height: min(74svh, 600px);
+    background: radial-gradient(90% 60% at 50% 40%, rgba(104, 217, 232, 0.07), transparent 72%);
+  }
+
+  .sky-block.is-depth-loading .sky-chart-wrap::after {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--ink-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    content: "3D 불러오는 중…";
+  }
+
+  .depth-gl,
+  .depth-ov {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* 세로 끌기는 페이지 스크롤에 양보하고, 가로 끌기만 직접 처리한다 */
+  .depth-gl {
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .depth-gl:active {
+    cursor: grabbing;
+  }
+
+  .depth-gl:focus-visible {
+    outline-offset: -4px;
+  }
+
+  .depth-ov {
+    pointer-events: none;
+  }
+
+  .depth-panel {
+    display: grid;
+    gap: 10px;
+    padding: 10px 14px 12px;
+    border-top: 1px solid var(--line);
+    background: rgba(8, 24, 38, 0.72);
+  }
+
+  .depth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .depth-view {
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    color: var(--ink);
+    background: rgba(255, 249, 238, 0.05);
+    font-size: 0.8rem;
+    font-weight: 760;
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  }
+
+  .depth-view[aria-pressed="true"] {
+    border-color: var(--gold-edge);
+    color: var(--gold);
+    background: var(--gold-tint);
+  }
+
+  .depth-hint {
+    margin-left: auto;
+    color: var(--ink-muted);
+    font-size: 0.7rem;
+  }
+
+  .depth-readout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+  }
+
+  .depth-readout > div {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    min-width: 0;
+    padding: 8px 12px 9px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255, 249, 238, 0.035);
+    box-shadow: var(--edge-light);
+  }
+
+  .depth-readout dt {
+    margin: 0;
+    font-size: 0.66rem;
+    font-weight: 700;
+  }
+
+  .depth-near dt {
+    color: var(--green);
+  }
+
+  .depth-far dt {
+    color: var(--gold);
+  }
+
+  .depth-readout dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 8px;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .depth-readout dd strong {
+    font-size: 0.92rem;
+    font-weight: 760;
+    overflow-wrap: anywhere;
+  }
+
+  .depth-readout dd span {
+    font-family: var(--font-display);
+    font-size: 0.86rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .depth-readout dd small {
+    flex-basis: 100%;
+    color: var(--ink-muted);
+    font-size: 0.68rem;
+  }
+
+  .depth-selected {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    background: rgba(255, 249, 238, 0.06);
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+
+  .depth-note,
+  .depth-credit {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: 0.7rem;
+    line-height: 1.55;
+  }
+
+  .depth-credit {
+    opacity: 0.8;
+  }
+
+  .depth-note .depth-credit {
+    display: block;
+    margin-top: 2px;
   }
 
   .detail-copy {
@@ -2785,6 +3029,13 @@
     .sky-chart-wrap {
       aspect-ratio: 1;
       min-height: 420px;
+    }
+
+    /* 2단 배치에서는 성도 블록이 고정(sticky)이라 화면보다 커지면 아래가 잘린다 — 화면 높이에 맞춘다 */
+    .sky-block[data-sky-mode="3d"] .sky-chart-wrap {
+      aspect-ratio: 1.4;
+      min-height: 340px;
+      max-height: max(340px, calc(100svh - 82px - 316px));
     }
 
     .title-core {

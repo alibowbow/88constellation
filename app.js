@@ -5,7 +5,9 @@
     const STORAGE_KEYS = {
         learned: 'learnedConstellations',
         magnitude: 'skyLimitMag',
-        mistakes: 'quizMistakes'
+        mistakes: 'quizMistakes',
+        skyMode: 'skyViewMode',
+        depthHint: 'skyDepthHintSeen'
     };
 
     const FILTER_LABELS = {
@@ -1420,6 +1422,14 @@
         return 5.2;
     }
 
+    function readSkyMode() {
+        try {
+            return localStorage.getItem(STORAGE_KEYS.skyMode) === '3d' ? '3d' : '2d';
+        } catch (error) {
+            return '2d';
+        }
+    }
+
     function setHidden(element, hidden) {
         if (!element) return;
         element.classList.toggle('hidden', hidden);
@@ -1483,6 +1493,7 @@
         learned: readSet(STORAGE_KEYS.learned, validStorageKeys),
         mistakes: readSet(STORAGE_KEYS.mistakes, validStorageKeys),
         magnitude: readMagnitude(),
+        skyMode: readSkyMode(),
         detailOpenedInternally: false,
         detailReturnHash: '#explore',
         currentRoute: '',
@@ -1898,6 +1909,8 @@
         if (!state.sky) return;
         if (state.sky.raf) cancelAnimationFrame(state.sky.raf);
         if (state.sky.observer) state.sky.observer.disconnect();
+        state.sky.depthToken = (state.sky.depthToken || 0) + 1;
+        if (state.sky.depth) state.sky.depth.destroy();
         state.sky = null;
     }
 
@@ -2225,10 +2238,235 @@
         return '청정 하늘';
     }
 
+    // ── 3D 깊이 보기 ─────────────────────────────────────────────
+    // 별자리 별들을 지구로부터의 실제 거리(광년)로 보여준다. WebGL 이 있을 때만 켜지고,
+    // 처음 쓸 때 데이터·엔진을 불러온다(첫 화면 용량은 그대로).
+    const DEPTH_ASSETS = ['./depth-data.js?v=1', './depth3d.js?v=1'];
+    let depthSupport = null;
+    let depthLoading = null;
+
+    function depthSupported() {
+        if (depthSupport !== null) return depthSupport;
+        depthSupport = false;
+        try {
+            if (!window.ResizeObserver || !window.IntersectionObserver || !window.PointerEvent) return false;
+            const probe = document.createElement('canvas');
+            const gl = probe.getContext('webgl2') || probe.getContext('webgl');
+            if (!gl) return false;
+            const lose = gl.getExtension('WEBGL_lose_context');
+            if (lose) lose.loseContext();
+            depthSupport = true;
+        } catch (error) {
+            depthSupport = false;
+        }
+        return depthSupport;
+    }
+
+    function loadScriptOnce(source) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = source;
+            script.async = false;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(source));
+            document.head.appendChild(script);
+        });
+    }
+
+    function loadDepthAssets() {
+        if (window.Depth3D && window.SKY_DEPTH) return Promise.resolve();
+        if (!depthLoading) {
+            depthLoading = Promise.all(DEPTH_ASSETS.map(loadScriptOnce)).catch((error) => {
+                depthLoading = null;
+                throw error;
+            });
+        }
+        return depthLoading;
+    }
+
+    function prefersReducedMotion() {
+        return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    function depthHintSeen() {
+        try {
+            return localStorage.getItem(STORAGE_KEYS.depthHint) === '1';
+        } catch (error) {
+            return true;
+        }
+    }
+
+    function markDepthHintSeen() {
+        try {
+            localStorage.setItem(STORAGE_KEYS.depthHint, '1');
+        } catch (error) {
+            // 힌트는 한 번 더 보여도 괜찮다.
+        }
+    }
+
+    function skyHeadMarkup() {
+        const isNew = !depthHintSeen();
+        return `
+            <div class="sky-head">
+                <span class="sky-head-title">지구에서 본 하늘</span>
+                <div class="sky-mode" role="group" aria-label="성도 보기 방식">
+                    <button type="button" class="sky-mode-button" data-mode="2d" aria-pressed="true">평면</button>
+                    <button type="button" class="sky-mode-button${isNew ? ' is-new' : ''}" data-mode="3d" aria-pressed="false">3D 깊이</button>
+                </div>
+            </div>`;
+    }
+
+    function depthPanelMarkup() {
+        return `
+            <div class="depth-panel hidden" aria-hidden="true">
+                <div class="depth-actions" role="group" aria-label="보는 방향">
+                    <button type="button" class="depth-view" data-view="earth" aria-pressed="false">지구에서 보기</button>
+                    <button type="button" class="depth-view" data-view="side" aria-pressed="false">옆에서 보기</button>
+                    <span class="depth-hint">좌우로 끌어 돌려 보세요</span>
+                </div>
+                <dl class="depth-readout" aria-live="polite">
+                    <div class="depth-near"><dt>가장 가까운 별</dt><dd></dd></div>
+                    <div class="depth-far"><dt>가장 먼 별</dt><dd></dd></div>
+                </dl>
+                <p class="depth-selected hidden" aria-live="polite"></p>
+                <p class="depth-note"><span class="depth-scale"></span><span class="depth-credit">거리는 Hipparcos 시차 측정값(HYG v4.1, CC BY-SA 4.0)이에요. 먼 별일수록 오차가 커서 반올림해 보여줘요.</span></p>
+            </div>`;
+    }
+
+    function depthStarMarkup(star) {
+        const text = window.Depth3D.format(star.ly, star.est);
+        return `<strong>${escapeHTML(star.name)}</strong><span>${escapeHTML(text.ly)}</span><small>빛이 ${escapeHTML(text.years)}에 출발</small>`;
+    }
+
+    function wireDepth(constellation, block, draw) {
+        const sky = state.sky;
+        const wrap = block.querySelector('.sky-chart-wrap');
+        const controls2D = block.querySelector('.sky-controls');
+        const panel = block.querySelector('.depth-panel');
+        const title = block.querySelector('.sky-head-title');
+        const modeButtons = Array.from(block.querySelectorAll('.sky-mode-button'));
+        const viewButtons = Array.from(block.querySelectorAll('.depth-view'));
+        const nearBox = block.querySelector('.depth-near dd');
+        const farBox = block.querySelector('.depth-far dd');
+        const selectedLine = block.querySelector('.depth-selected');
+        const note = block.querySelector('.depth-scale');
+        const names = parseName(constellation);
+
+        const markMode = (mode) => {
+            sky.mode = mode;
+            block.dataset.skyMode = mode;
+            modeButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mode === mode)));
+            title.textContent = mode === '3d' ? '실제 거리로 본 하늘' : '지구에서 본 하늘';
+            setHidden(controls2D, mode === '3d');
+            setHidden(panel, mode !== '3d');
+        };
+
+        const leave3D = () => {
+            sky.depthToken += 1;
+            if (sky.depth) {
+                sky.depth.destroy();
+                sky.depth = null;
+            }
+            block.classList.remove('is-depth-loading');
+        };
+
+        const enter2D = () => {
+            leave3D();
+            markMode('2d');
+            requestAnimationFrame(draw);
+        };
+
+        const fallback = (message) => {
+            if (state.sky !== sky) return;
+            enter2D();
+            if (message) showToast(message);
+        };
+
+        const enter3D = () => {
+            const token = ++sky.depthToken;
+            markMode('3d');
+            block.classList.add('is-depth-loading');
+            loadDepthAssets().then(() => {
+                if (state.sky !== sky || sky.depthToken !== token) return;
+                block.classList.remove('is-depth-loading');
+                const data = window.SKY_DEPTH && window.SKY_DEPTH[constellation.abbr];
+                const view = window.Depth3D.mount({
+                    host: wrap,
+                    data,
+                    reduceMotion: prefersReducedMotion(),
+                    label: `${names.korean} 별들의 실제 3차원 위치`,
+                    onView(current) {
+                        viewButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === current)));
+                    },
+                    onSelect(info) {
+                        if (!info) {
+                            selectedLine.textContent = '';
+                            setHidden(selectedLine, true);
+                            return;
+                        }
+                        const text = window.Depth3D.format(info.ly, info.est);
+                        selectedLine.innerHTML = `<strong>${escapeHTML(info.name)}</strong> · ${escapeHTML(text.ly)} · 빛이 ${escapeHTML(text.years)}에 출발 · ${info.mag.toFixed(1)}등급`;
+                        setHidden(selectedLine, false);
+                    },
+                    onFail() {
+                        depthSupport = false;
+                        fallback('이 기기에서는 3D 보기를 쓸 수 없어 평면으로 돌아왔어요.');
+                    }
+                });
+                if (!view) return;
+                sky.depth = view;
+                const summary = view.summary;
+                nearBox.innerHTML = depthStarMarkup(summary.near);
+                farBox.innerHTML = depthStarMarkup(summary.far);
+                const scale = summary.exag > 1.05
+                    ? `가로로 퍼진 폭은 보기 쉽게 약 ${summary.exag}배 넓혀 그렸어요. 세로는 지구까지의 실제 거리 비율이에요.`
+                    : '가로와 세로 모두 실제 비율이에요.';
+                note.textContent = summary.ratio < 3
+                    ? `${scale} 이 별자리의 별들은 비교적 비슷한 거리에 모여 있어요. `
+                    : `${scale} `;
+                const gl = wrap.querySelector('.depth-gl');
+                if (gl) {
+                    const near = window.Depth3D.format(summary.near.ly, summary.near.est).ly;
+                    const far = window.Depth3D.format(summary.far.ly, summary.far.est).ly;
+                    gl.setAttribute('aria-label', `${names.korean} 별들의 실제 3차원 위치. 지구에서 가장 가까운 별 ${near}, 가장 먼 별 ${far}`);
+                }
+                window.setTimeout(() => {
+                    if (state.sky === sky && sky.depth === view) view.go('side');
+                }, prefersReducedMotion() ? 0 : 450);
+            }).catch(() => {
+                fallback('3D 보기를 불러오지 못했어요. 평면으로 보여드릴게요.');
+            });
+        };
+
+        modeButtons.forEach((button) => button.addEventListener('click', () => {
+            const mode = button.dataset.mode;
+            if (mode === sky.mode) return;
+            state.skyMode = mode;
+            try {
+                localStorage.setItem(STORAGE_KEYS.skyMode, mode);
+            } catch (error) {
+                // 이번 화면에서만 기억한다.
+            }
+            if (mode === '3d') {
+                markDepthHintSeen();
+                modeButtons.forEach((item) => item.classList.remove('is-new'));
+                enter3D();
+            } else {
+                enter2D();
+            }
+        }));
+        viewButtons.forEach((button) => button.addEventListener('click', () => {
+            if (sky.depth) sky.depth.go(button.dataset.view);
+        }));
+        if (state.skyMode === '3d') enter3D();
+    }
+
     function renderSky(constellation) {
         cleanupSky();
+        const canDepth = depthSupported();
         elements.imageContainer.innerHTML = `
-            <section class="sky-block" aria-label="${escapeHTML(parseName(constellation).korean)} 실제 성도">
+            <section class="sky-block" data-sky-mode="2d" aria-label="${escapeHTML(parseName(constellation).korean)} 실제 성도">
+                ${canDepth ? skyHeadMarkup() : ''}
                 <div class="sky-chart-wrap">
                     <canvas class="sky-chart" role="img" aria-label="${escapeHTML(parseName(constellation).korean)}의 실제 별 배치"></canvas>
                 </div>
@@ -2236,14 +2474,27 @@
                     <label class="sky-mag-label" for="sky-magnitude">보이는 별 <b>${escapeHTML(magnitudeLabel())}</b></label>
                     <input id="sky-magnitude" class="sky-slider" type="range" min="3.5" max="5.5" step="0.1" value="${state.magnitude}" aria-label="성도에 표시할 별의 밝기 한계" aria-valuetext="${escapeHTML(magnitudeLabel())}">
                 </div>
+                ${canDepth ? depthPanelMarkup() : ''}
                 <p class="sky-legend">실측 항성 위치와 IAU 별자리 이음선을 바탕으로 그린 성도입니다. 슬라이더로 관측 환경을 바꿔보세요.</p>
             </section>
         `;
+        const block = elements.imageContainer.querySelector('.sky-block');
         const canvas = elements.imageContainer.querySelector('.sky-chart');
         const slider = elements.imageContainer.querySelector('.sky-slider');
         const label = elements.imageContainer.querySelector('.sky-mag-label b');
-        const draw = () => drawSky(canvas, constellation);
-        state.sky = { canvas, constellation, observer: null, raf: requestAnimationFrame(draw) };
+        const draw = () => {
+            if (state.sky && state.sky.mode === '3d') return;
+            drawSky(canvas, constellation);
+        };
+        state.sky = {
+            canvas,
+            constellation,
+            observer: null,
+            raf: requestAnimationFrame(draw),
+            mode: '2d',
+            depth: null,
+            depthToken: 0
+        };
 
         if (typeof ResizeObserver === 'function') {
             let previousWidth = 0;
@@ -2267,6 +2518,8 @@
             }
             draw();
         });
+
+        if (canDepth) wireDepth(constellation, block, draw);
     }
 
     function toggleCurrentConstellation() {
@@ -3151,7 +3404,7 @@
         window.addEventListener('resize', () => {
             window.clearTimeout(state.resizeTimer);
             state.resizeTimer = window.setTimeout(() => {
-                if (state.sky) drawSky(state.sky.canvas, state.sky.constellation);
+                if (state.sky && state.sky.mode !== '3d') drawSky(state.sky.canvas, state.sky.constellation);
                 if (state.currentRoute.startsWith('collection/')) restoreWholeSkyMapScroll();
             }, 120);
         });
@@ -3166,7 +3419,7 @@
                         slider.setAttribute('aria-valuetext', magnitudeLabel());
                     }
                     if (label) label.textContent = magnitudeLabel();
-                    drawSky(state.sky.canvas, state.sky.constellation);
+                    if (state.sky.mode !== '3d') drawSky(state.sky.canvas, state.sky.constellation);
                 }
                 return;
             }
