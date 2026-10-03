@@ -1425,6 +1425,19 @@
     letter-spacing: 0.06em;
   }
 
+  /* 설명 문구: 여백이 없어 블록 가장자리에서 글자가 잘리던 문제(520px 이상 폭) */
+  .sky-legend {
+    margin: 0;
+    padding: 2px 14px 14px;
+    background: rgba(8, 24, 38, 0.72);
+    line-height: 1.6;
+  }
+
+  /* 3D 에는 슬라이더가 없고 패널이 자체 안내를 가지고 있어 숨긴다 */
+  .sky-block[data-sky-mode="3d"] .sky-legend {
+    display: none;
+  }
+
   .sky-slider {
     width: 100%;
     min-height: 44px;
@@ -3021,21 +3034,18 @@
       gap: clamp(32px, 5vw, 68px);
     }
 
-    .image-container {
-      position: sticky;
-      top: 82px;
-    }
-
+    /* 왼쪽 성도 칸을 위에 고정(sticky)하지 않는다 — 왼쪽에서 스크롤해도 오른쪽만 움직이고
+       왼쪽은 한참 뒤에야 움직이는 문제가 있었다. 고정 오프셋(82px)은 이미 없어진 상단바 높이였다. */
     .sky-chart-wrap {
       aspect-ratio: 1;
       min-height: 420px;
     }
 
-    /* 2단 배치에서는 성도 블록이 고정(sticky)이라 화면보다 커지면 아래가 잘린다 — 화면 높이에 맞춘다 */
+    /* 2단 배치의 3D 차트: 가로로 넓게(1.4:1), 낮은 화면에서도 화면을 넘지 않게 */
     .sky-block[data-sky-mode="3d"] .sky-chart-wrap {
       aspect-ratio: 1.4;
       min-height: 340px;
-      max-height: max(340px, calc(100svh - 82px - 316px));
+      max-height: max(340px, 72svh);
     }
 
     .title-core {
